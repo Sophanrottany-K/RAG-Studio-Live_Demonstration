@@ -109,3 +109,131 @@ body {
 .docx-original img {
   max-width: 100%;
 }
+
+/* ---------------------------------------------------------------------------
+   Tokens of the RAG Studio web app (ragstudio-web-ui, src/app/globals.css), used by the
+   Analytics page and AppSidebar so their markup matches that app class for class.
+   Light theme only; the names don't overlap the Figma tokens above.
+   ------------------------------------------------------------------------ */
+:root {
+  --bg-page: #fafaf9;
+  --bg-card: #ffffff;
+  --bg-subtle: #f0f0ee;
+  --bg-muted: #ececea;
+  --bg-inverse: #111111;
+  --ink-inverse: #ffffff;
+  --ink-primary: #111111;
+  --ink-body: #444444;
+  --ink-secondary: #6b6b6b;
+  --ink-muted: #8a8a86;
+  --ink-disabled: #9a9a96;
+  --border-default: #e4e4e0;
+  --border-strong: #111111;
+  --accent: #4b3fd1;
+  --accent-tint: #ecebff;
+  --success: #2e9e66;
+  --success-text: #17653f;
+  --success-tint: #e3f4ea;
+  --warning: #e0a100;
+  --warning-text: #7a4a00;
+  --warning-tint: #ffefc2;
+  --danger: #b3261e;
+  --danger-text: #b3261e;
+  --danger-tint: #fde8e6;
+  --info-text: #2b49c4;
+  --info-tint: #e5ecff;
+  --neutral-text: #555555;
+  --neutral-tint: #ececea;
+
+  /* AppSidebar width; html[data-sidebar="collapsed"] switches it to the icon rail */
+  --app-sidebar-w: 18rem;
+}
+html[data-sidebar="collapsed"] {
+  --app-sidebar-w: 5rem;
+}
+
+@theme inline {
+  --font-mono: "Geist Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --color-page: var(--bg-page);
+  --color-card: var(--bg-card);
+  --color-subtle: var(--bg-subtle);
+  --color-muted: var(--bg-muted);
+  --color-inverse: var(--bg-inverse);
+  --color-on-inverse: var(--ink-inverse);
+  --color-ink: var(--ink-primary);
+  --color-line: var(--border-default);
+  --color-line-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-tint: var(--accent-tint);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info-text: var(--info-text);
+  --color-info-tint: var(--info-tint);
+}
+
+@theme {
+  --radius-xs: 4px;
+  --radius-tag: 8px;
+  --radius-small: 12px;
+  --radius-input: 16px;
+  --radius-card-sm: 20px;
+  --radius-card: 28px;
+  --radius-pill: 999px;
+
+  --shadow-subtle: 0 1px 3px rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-elevated: 0 5px 20px rgb(17 17 17 / 0.1), 0 1px 6px rgb(17 17 17 / 0.04);
+
+  --text-h1: 3rem;
+  --text-h1--line-height: 3.625rem;
+  --text-h1--font-weight: 700;
+  --text-h1--letter-spacing: -0.03em;
+  --text-h2: 2.5rem;
+  --text-h2--line-height: 3rem;
+  --text-h2--font-weight: 700;
+  --text-h2--letter-spacing: -0.03em;
+  --text-h3: 2rem;
+  --text-h3--line-height: 2.375rem;
+  --text-h3--font-weight: 700;
+  --text-h3--letter-spacing: -0.03em;
+  --text-h5: 1.5rem;
+  --text-h5--line-height: 1.75rem;
+  --text-h5--font-weight: 700;
+  --text-h5--letter-spacing: -0.02em;
+  --text-s1: 1.125rem;
+  --text-s1--line-height: 1.75rem;
+  --text-s1--font-weight: 700;
+  --text-s2: 1rem;
+  --text-s2--line-height: 1.5rem;
+  --text-s2--font-weight: 700;
+  --text-p1: 1rem;
+  --text-p1--line-height: 1.5rem;
+  --text-p2: 1rem;
+  --text-p2--line-height: 1.5rem;
+  --text-p2--font-weight: 500;
+  --text-p3: 0.875rem;
+  --text-p3--line-height: 1.25rem;
+  --text-p4: 0.875rem;
+  --text-p4--line-height: 1.25rem;
+  --text-p4--font-weight: 500;
+  --text-c1: 0.75rem;
+  --text-c1--line-height: 1rem;
+  --text-c2: 0.75rem;
+  --text-c2--line-height: 1rem;
+  --text-c2--font-weight: 500;
+  --text-c3: 0.625rem;
+  --text-c3--line-height: 0.875rem;
+  --text-c3--font-weight: 500;
+  --text-eyebrow: 0.6875rem;
+  --text-eyebrow--line-height: 1rem;
+  --text-eyebrow--font-weight: 500;
+  --text-eyebrow--letter-spacing: 0.16em;
+  --text-btn-sm: 0.875rem;
+  --text-btn-sm--line-height: 1rem;
+  --text-btn-sm--font-weight: 700;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

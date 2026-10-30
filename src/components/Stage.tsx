@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { Toaster } from "./shared/Toaster";
 
 // Every screen fills the whole browser window on any laptop.
 // The layout is fluid, and the UI density adapts to the window: we pick a scale
@@ -38,6 +39,7 @@ export function Stage({ children }: { children: ReactNode }) {
       <div className="overflow-clip" style={{ width: Math.floor(layoutW * scale), height: Math.floor(layoutH * scale) }}>
         <div className="origin-top-left" style={{ width: layoutW, height: layoutH, transform: `scale(${scale})` }}>
           {children}
+          <Toaster />
         </div>
       </div>
     </div>

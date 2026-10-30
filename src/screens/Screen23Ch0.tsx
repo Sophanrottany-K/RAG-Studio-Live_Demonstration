@@ -66,7 +66,7 @@ export default function Screen23Ch0() {
     : 0;
 
   return (
-    <div className="relative w-full h-full bg-bg-card overflow-hidden flex items-start pl-84">
+    <div className="relative w-full h-full bg-bg-card overflow-hidden flex items-start pl-(--app-sidebar-w)">
       <div className="flex-1 min-w-0 self-stretch bg-bg-page overflow-hidden flex flex-col items-start">
         <Header />
         <div className="self-stretch flex-1 min-h-0 overflow-y-auto">
@@ -170,6 +170,7 @@ export default function Screen23Ch0() {
                 />
                 <WidgetCard
                   chatbotId={channels.chatbotId}
+                  chatbotName={selected?.name}
                   widget={channels.widget}
                   onSaved={setChannels}
                   chatbotPaused={paused}

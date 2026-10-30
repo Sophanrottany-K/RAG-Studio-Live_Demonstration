@@ -27,6 +27,7 @@ import Screen42KbReady from "./Screen42KbReady";
 import Screen43Pg2 from "./Screen43Pg2";
 import Screen44PgAns2 from "./Screen44PgAns2";
 import Screen45Bot from "./Screen45Bot";
+import Screen47Unanswered from "./Screen47Unanswered";
 
 // One entry per Figma frame, in prototype order. The Create chatbot wizard is now one
 // interactive screen per step, so its extra Figma states (s1f, s2q, s3u, s3f, s3l) alias them.
@@ -77,4 +78,5 @@ export const screens = [
   { path: "/pg2", title: "Demo 43 · [pg2] A6 · Playground · Test again", Component: Screen43Pg2 },
   { path: "/pgAns2", title: "Demo 44 · [pgAns2] A6 · Answer from new knowledge", Component: Screen44PgAns2 },
   { path: "/bot", title: "Chatbot detail (live data)", Component: Screen45Bot },
+  { path: "/analytics/unanswered", title: "Analytics · All unanswered questions (live data)", Component: Screen47Unanswered },
 ];

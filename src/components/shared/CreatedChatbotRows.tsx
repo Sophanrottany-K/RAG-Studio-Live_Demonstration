@@ -6,17 +6,21 @@ import type { Chatbot, ChatbotStatus } from "../../services/types";
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-const STATUS_PILL: Record<ChatbotStatus, { label: string; className: string }> = {
-  draft: { label: "Draft", className: "bg-[#8A8A864D] border-[#8A8A86] text-neutral-text" },
-  pending: { label: "Pending", className: "bg-[#E0A1004D] border-[#E0A100] text-warning-text" },
+// "disabled" (by an admin) has no ChatbotStatus yet; its pill is here for when the API sends it.
+const STATUS_PILL: Record<ChatbotStatus | "disabled", { label: string; className: string }> = {
+  draft: { label: "Draft", className: "bg-neutral-tint border-[#8A8A86] text-neutral-text" },
+  pending: { label: "Pending", className: "bg-info-tint border-info-text text-info-text" },
   active: { label: "Active", className: "bg-[#2E9E664D] border-success-solid text-success-text" },
-  paused: { label: "Paused", className: "bg-[#8A8A864D] border-[#8A8A86] text-neutral-text" },
+  paused: { label: "Paused", className: "bg-warning-tint border-warning-solid text-warning-text" },
+  disabled: { label: "Disabled", className: "bg-danger-tint border-danger-solid text-danger-text" },
 };
 
-/** Chatbots created through the wizard, fetched from the API and shown above the demo rows. */
-export function CreatedChatbotRows() {
+/** Chatbots created through the wizard, fetched from the API. `onCount` reports how many rows are shown. */
+export function CreatedChatbotRows({ onCount }: { onCount?: (count: number) => void }) {
   const navigate = useNavigate();
   const [bots, setBots] = useState<Chatbot[]>([]);
+
+  useEffect(() => onCount?.(bots.length), [onCount, bots.length]);
 
   useEffect(() => {
     const controller = new AbortController();

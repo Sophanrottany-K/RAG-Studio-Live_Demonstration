@@ -1,10 +1,23 @@
+// Public Share Link channel card, laid out as in the RAG Studio web app
+// (features/channels/components/public-link-card.tsx): page settings, then the guest URL and its actions.
 import { useRef, useState } from "react";
-import { api } from "../../services/api";
+import { QRCodeCanvas } from "qrcode.react";
+import { api, errorMessage } from "../../services/api";
 import { LINK_TITLE_MAX, isHexColor } from "../../services/limits";
 import type { ChatbotChannels, PublicLinkChannel } from "../../services/types";
 import { ConfirmDialog } from "../create/ConfirmDialog";
-import { Banner, Button, Field, TextInput } from "../create/ui";
-import { ChannelCard, ColorField, CopyButton, Divider, SubTitle, formatDateTime, splitError } from "./parts";
+import { ChannelCard, formatDateTime } from "./parts";
+import {
+  ColorSetting,
+  Notice,
+  SectionLabel,
+  buttonStyles,
+  cx,
+  fieldStyles,
+  labelStyles,
+  readOnlyFieldStyles,
+  useFeedback,
+} from "./ui";
 
 // <input type="datetime-local"> works in local time without a zone: "2026-10-31T23:59".
 const toLocalInput = (iso: string | null) => {
@@ -12,6 +25,9 @@ const toLocalInput = (iso: string | null) => {
   const d = new Date(iso);
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 };
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 export function PublicLinkCard({
   chatbotId,
@@ -25,44 +41,71 @@ export function PublicLinkCard({
   /** While the chatbot is paused the link answers "temporarily unavailable", whatever its own state. */
   chatbotPaused?: boolean;
 }) {
-  const urlRef = useRef<HTMLDivElement>(null);
   const [title, setTitle] = useState(link.title);
   const [expires, setExpires] = useState(toLocalInput(link.expiresAt));
   const [color, setColor] = useState(link.themeColor);
   const [busy, setBusy] = useState<null | "save" | "toggle" | "regenerate">(null);
-  const [fieldError, setFieldError] = useState<{ field: string | null; message: string } | null>(null);
+  const [copied, setCopied] = useState(false);
   const [confirmRegenerate, setConfirmRegenerate] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const settingsFeedback = useFeedback();
+  const linkFeedback = useFeedback();
 
-  const titleError = !title.trim() ? "Give the chat page a title." : null;
-  const colorError = !isHexColor(color) ? "Use a hex color like #111111." : null;
-  const errorFor = (field: string) => (fieldError?.field === field ? fieldError.message : null);
+  const url = link.url;
+  const live = link.configured && link.enabled;
 
-  const run = async (kind: NonNullable<typeof busy>, call: () => Promise<ChatbotChannels>, fields: string[] = []) => {
-    setBusy(kind);
-    setFieldError(null);
+  const save = async () => {
+    if (!title.trim()) return settingsFeedback.show({ tone: "danger", text: "Give the chat page a title." });
+    if (!isHexColor(color)) return settingsFeedback.show({ tone: "danger", text: "Use a hex color like #111111." });
+    const first = !url;
+    setBusy("save");
     try {
-      onSaved(await call());
+      onSaved(
+        await api.savePublicLink(chatbotId, {
+          title: title.trim(),
+          themeColor: color,
+          expiresAt: expires ? new Date(expires).toISOString() : null,
+        }),
+      );
+      settingsFeedback.show({ tone: "success", text: first ? "Guest link generated." : "Link settings saved." });
     } catch (e) {
-      setFieldError(splitError(e, fields));
+      settingsFeedback.show({ tone: "danger", text: errorMessage(e) });
     } finally {
       setBusy(null);
     }
   };
 
-  const save = () => {
-    if (titleError || colorError)
-      return setFieldError({ field: titleError ? "title" : "themeColor", message: (titleError ?? colorError)! });
-    run(
-      "save",
-      () =>
-        api.savePublicLink(chatbotId, {
-          title: title.trim(),
-          themeColor: color,
-          expiresAt: expires ? new Date(expires).toISOString() : null,
-        }),
-      ["title", "themeColor", "expiresAt"],
-    );
+  const copyLink = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+      linkFeedback.show({ tone: "success", text: "Link copied." });
+    } catch {
+      linkFeedback.show({ tone: "danger", text: "Could not copy. Select the text and copy it yourself." });
+    }
   };
+
+  const linkAction = async (kind: "toggle" | "regenerate", call: () => Promise<ChatbotChannels>, done: string) => {
+    setBusy(kind);
+    try {
+      onSaved(await call());
+      linkFeedback.show({ tone: "success", text: done });
+    } catch (e) {
+      linkFeedback.show({ tone: "danger", text: errorMessage(e) });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const toggle = () =>
+    linkAction(
+      "toggle",
+      () => api.setChannelEnabled(chatbotId, "public-link", !link.enabled),
+      link.enabled
+        ? "Link disabled. Guests now see “This link is not available”."
+        : "Link enabled. Guests can open it now.",
+    );
 
   const state = !link.configured ? "off" : !link.enabled ? "paused" : chatbotPaused ? "chatbotPaused" : "live";
   const subtitle = link.configured
@@ -71,120 +114,100 @@ export function PublicLinkCard({
 
   return (
     <ChannelCard icon="icons/channel-icon.svg" title="Public Share Link" subtitle={subtitle} state={state}>
-      {/* The settings are chosen once, when the link is generated. */}
-      {!link.configured && (
-        <>
-          <SubTitle>Link settings</SubTitle>
-          <form
-            className="self-stretch flex flex-col items-start gap-5"
-            noValidate
-            onSubmit={(e) => {
-              e.preventDefault();
-              save();
-            }}
-          >
-            <div className="self-stretch flex items-start gap-4">
-              <div className="flex-1 min-w-0">
-                <Field
-                  label="Page title"
-                  htmlFor="link-title"
-                  counter={`${title.length}/${LINK_TITLE_MAX}`}
-                  error={errorFor("title")}
-                  hint="Shown at the top of the guest chat page."
-                >
-                  <TextInput
-                    id="link-title"
-                    value={title}
-                    maxLength={LINK_TITLE_MAX}
-                    invalid={!!errorFor("title")}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </Field>
-              </div>
-              <div className="flex-1 min-w-0">
-                <Field
-                  label="Expiry date (optional)"
-                  htmlFor="link-expiry"
-                  error={errorFor("expiresAt")}
-                  hint={
-                    expires ? (
-                      <button type="button" className="underline cursor-pointer" onClick={() => setExpires("")}>
-                        Remove expiry — link never expires
-                      </button>
-                    ) : (
-                      "Leave empty to keep the link working until you disable it."
-                    )
-                  }
-                >
-                  <TextInput
-                    id="link-expiry"
-                    type="datetime-local"
-                    value={expires}
-                    min={toLocalInput(new Date().toISOString())}
-                    invalid={!!errorFor("expiresAt")}
-                    onChange={(e) => setExpires(e.target.value)}
-                  />
-                </Field>
-              </div>
-            </div>
-            <Field
-              label="Theme color"
-              htmlFor="link-color"
-              error={errorFor("themeColor")}
-              hint="Used for the header and the guest's message bubbles."
-            >
-              <ColorField id="link-color" value={color} onChange={setColor} invalid={!!errorFor("themeColor")} />
-            </Field>
-            {fieldError && !fieldError.field && <Banner tone="danger">{fieldError.message}</Banner>}
-            <Button type="submit" variant="primary" loading={busy === "save"}>
-              Save and generate link
-            </Button>
-          </form>
-          <Divider />
-        </>
-      )}
-      <SubTitle>Guest link</SubTitle>
-      {!link.url ? (
-        <div className="self-stretch bg-bg-soft rounded-[12px] px-4 py-3 font-gabarito text-[14px] text-ink-body">
-          No public link yet. Save your settings to generate a guest link.
-        </div>
-      ) : (
-        <div className="self-stretch flex flex-col items-start gap-3">
-          <Field label="Guest URL">
-            <div
-              ref={urlRef}
-              className={`self-stretch bg-bg-page border border-border-default rounded-[12px] px-4 py-[13px] font-roboto-mono text-[13px] break-all ${link.enabled ? "text-ink-primary" : "text-ink-muted line-through"}`}
-            >
-              {link.url}
-            </div>
-          </Field>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <CopyButton text={link.url} label="Copy link" fallbackTarget={() => urlRef.current} />
-            <Button disabled={!link.enabled} onClick={() => window.open(link.url!, "_blank", "noopener")}>
-              Open guest preview ↗
-            </Button>
-            <Button
-              loading={busy === "toggle"}
-              onClick={() => run("toggle", () => api.setChannelEnabled(chatbotId, "public-link", !link.enabled))}
-            >
-              {link.enabled ? "Disable" : "Enable"}
-            </Button>
-            <Button loading={busy === "regenerate"} onClick={() => setConfirmRegenerate(true)}>
-              Regenerate
-            </Button>
+      <div className="self-stretch font-gabarito">
+        <SectionLabel>{"Link settings"}</SectionLabel>
+        <div className="grid grid-cols-2 gap-5">
+          <div>
+            <label htmlFor="link-title" className={labelStyles}>
+              {"Page title"}
+            </label>
+            <input
+              id="link-title"
+              value={title}
+              maxLength={LINK_TITLE_MAX}
+              placeholder="e.g. Support chat"
+              onChange={(e) => setTitle(e.target.value)}
+              className={fieldStyles}
+            />
           </div>
-          {fieldError && !fieldError.field && <Banner tone="danger">{fieldError.message}</Banner>}
-          <div className="font-gabarito text-[13px] text-ink-secondary">
-            {!link.enabled
-              ? "This link is disabled. Guests who open it see “This link is no longer active”."
-              : chatbotPaused
-                ? "The chatbot is paused, so guests see “This chatbot is temporarily unavailable” until you resume it."
-                : link.expiresAt
-                  ? `Guests can use this link until ${formatDateTime(link.expiresAt)}.`
-                  : "This link doesn't expire."}
+          <div>
+            <label htmlFor="link-expiry" className={labelStyles}>
+              {"Expiry date (optional)"}
+            </label>
+            <input
+              id="link-expiry"
+              type="datetime-local"
+              value={expires}
+              min={toLocalInput(new Date().toISOString())}
+              onChange={(e) => setExpires(e.target.value)}
+              className={fieldStyles}
+            />
           </div>
         </div>
-      )}
+        <div className="mt-5">
+          <ColorSetting label="Theme color" value={color} onChange={setColor} />
+        </div>
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={save}
+          className={cx(buttonStyles.primary, "mt-6 h-12 px-6")}
+        >
+          {busy === "save" ? "Saving…" : url ? "Save link settings" : "Save and generate link"}
+        </button>
+
+        <div className="border-line mt-6 border-t pt-6">
+          <SectionLabel>{"Guest link"}</SectionLabel>
+          {!url ? (
+            <Notice>{"No public link yet. Save your settings to generate a guest link."}</Notice>
+          ) : (
+            <>
+              {!link.enabled && (
+                <Notice tone="danger" className="mb-5">
+                  {"! This link is disabled. Guests who open it see “This link is not available”."}
+                </Notice>
+              )}
+              <p className="text-p4 text-ink mb-2 font-bold">{"Guest URL"}</p>
+              <p className={cx(fieldStyles, readOnlyFieldStyles, "flex items-center truncate font-mono")}>{url}</p>
+
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <button type="button" onClick={() => copyLink(url)} className={buttonStyles.primary}>
+                  {copied ? "Copied" : "Copy link"}
+                </button>
+                <a href={url} target="_blank" rel="noreferrer" className={buttonStyles.outline}>
+                  {"Open guest preview ↗"}
+                </a>
+                <button
+                  type="button"
+                  disabled={busy !== null}
+                  onClick={toggle}
+                  className={live ? buttonStyles.danger : buttonStyles.outline}
+                >
+                  {busy === "toggle" ? "…" : live ? "Disable" : "Enable"}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy !== null}
+                  onClick={() => setConfirmRegenerate(true)}
+                  className={buttonStyles.outline}
+                >
+                  {busy === "regenerate" ? "…" : "Regenerate"}
+                </button>
+                <button type="button" onClick={() => setShowQr(true)} className={buttonStyles.ghost}>
+                  {"Show QR code"}
+                </button>
+              </div>
+
+              <p className="text-c1 text-ink-secondary mt-3">
+                {"Regenerate creates a new link. The old link stops working."}
+                {link.expiresAt && ` This link expires on ${formatDate(link.expiresAt)}.`}
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {url && showQr && <QrCodeDialog url={url} onClose={() => setShowQr(false)} />}
       <ConfirmDialog
         open={confirmRegenerate}
         title="Regenerate the guest link?"
@@ -194,12 +217,62 @@ export function PublicLinkCard({
         onCancel={() => setConfirmRegenerate(false)}
         onConfirm={() => {
           setConfirmRegenerate(false);
-          run("regenerate", () => api.regeneratePublicLink(chatbotId));
+          linkAction(
+            "regenerate",
+            () => api.regeneratePublicLink(chatbotId),
+            "New link generated. The old link no longer works.",
+          );
         }}
       >
         A new URL is created and the current one stops working right away. Anyone using the old link will need the new
         one.
       </ConfirmDialog>
     </ChannelCard>
+  );
+}
+
+/** The guest link as a QR code, with a PNG download. */
+function QrCodeDialog({ url, onClose }: { url: string; onClose: () => void }) {
+  // A larger hidden copy is what gets downloaded, so the PNG stays sharp when printed.
+  const downloadRef = useRef<HTMLCanvasElement>(null);
+  const download = () => {
+    const canvas = downloadRef.current;
+    if (!canvas) return;
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `${url.split("/").pop() || "public-link"}-qr.png`;
+    a.click();
+  };
+
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center font-gabarito">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="QR code for your public link"
+        className="rounded-card-sm bg-card relative w-full max-w-md p-7 shadow-[0px_16px_48px_0px_#0000001F]"
+      >
+        <h2 className="text-s1 text-ink font-bold">{"QR code for your public link"}</h2>
+        <p className="text-c1 text-ink-secondary mt-1">
+          {"Guests can scan this code with their phone to open the chat page."}
+        </p>
+        <div className="rounded-small bg-subtle mt-5 flex flex-col items-center gap-3 p-6">
+          <div className="rounded-small border-line bg-card border p-4">
+            <QRCodeCanvas value={url} size={168} level="H" marginSize={1} />
+          </div>
+          <p className="text-c1 text-ink-secondary max-w-full truncate">{url.replace(/^https?:\/\//, "")}</p>
+        </div>
+        <QRCodeCanvas ref={downloadRef} value={url} size={512} level="H" marginSize={1} className="hidden" />
+        <div className="mt-5 flex justify-end gap-2">
+          <button type="button" onClick={download} className={buttonStyles.outline}>
+            {"Download PNG"}
+          </button>
+          <button type="button" onClick={onClose} className={buttonStyles.primary}>
+            {"Done"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

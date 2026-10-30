@@ -146,6 +146,8 @@ export type ChatbotChannels = {
 
 export type SavePublicLinkRequest = Pick<PublicLinkChannel, "title" | "expiresAt" | "themeColor">;
 export type SaveWidgetRequest = Pick<WidgetChannel, "primaryColor" | "position" | "welcomeMessage" | "allowedDomains">;
+/** The widget settings that the embed code carries (data-color, data-position, data-welcome, data-domains). */
+export type WidgetEmbed = SaveWidgetRequest;
 
 /** Reply from POST /chatbots/:id/chat (playground) or POST /public/:token/chat (guest link). */
 export type ChatAnswer = {
@@ -175,6 +177,19 @@ export type PublicChat = {
   reason?: "paused" | "disabled" | "expired" | "not_published";
 };
 
+/** GET /widget/:chatbotId?host=: what the embedded web widget shows on the site at `host`. */
+export type WidgetChat = {
+  chatbotName: string;
+  primaryColor: string;
+  position: WidgetPosition;
+  welcomeMessage: string;
+  starterQuestions: string[];
+  sourceVisibility: SourceVisibility;
+  available: boolean;
+  /** paused / not_published: the bubble shows "temporarily unavailable". The others hide the widget. */
+  reason?: "paused" | "not_published" | "disabled" | "not_configured" | "domain_not_allowed";
+};
+
 /** Body of POST /chatbots/:id/documents: more sources for an existing chatbot. */
 export type AddDocumentsRequest = { uploadIds: string[]; urls: string[] };
 
@@ -188,4 +203,90 @@ export type DocumentOriginal = {
   /** Set for the demo chatbot's documents, which have a fixed Figma preview instead of a file. */
   demo?: "pdf" | "docx" | "xlsx" | "md";
   uploadedAt: string;
+};
+
+export type AnalyticsChannel = "public-link" | "widget" | "telegram" | "playground";
+export type AnalyticsGranularity = "daily" | "weekly" | "monthly";
+
+/** One bucket of the message trend (a day, a week or a month). */
+export type AnalyticsPoint = {
+  /** ISO date of the bucket's first day. */
+  start: string;
+  messages: number;
+  sessions: number;
+  answered: number;
+};
+
+/** GET /analytics — every figure on the Analytics screen, for one chatbot or all of them. */
+export type Analytics = {
+  generatedAt: string;
+  granularity: AnalyticsGranularity;
+  /** Human label of the period the totals cover, e.g. "last 14 days". */
+  periodLabel: string;
+  chatbotCount: number;
+  totals: {
+    messages: number;
+    answered: number;
+    unanswered: number;
+    sessions: number;
+    guests: number;
+    /** % change in messages against the previous period of the same length; null with no earlier data. */
+    messagesChangePct: number | null;
+  };
+  activeSessions: number;
+  knowledge: {
+    documents: number;
+    readyDocuments: number;
+    storageBytes: number;
+    storageLimitBytes: number;
+    indexBytes: number;
+  };
+  trend: AnalyticsPoint[];
+  channels: { channel: AnalyticsChannel; messages: number; sessions: number }[];
+  /** Guest thumbs up / down on answers in the period. */
+  feedback: { helpful: number; notHelpful: number };
+  /** Questions the bot couldn't answer in the period, most asked first. */
+  unanswered: { total: number; top: { question: string; chatbotId: string; count: number }[] };
+  /** Answers guests reported, newest first. */
+  reports: ReportedAnswer[];
+  usage: {
+    chatbots: number;
+    chatbotLimit: number;
+    perChatbot: {
+      chatbotId: string;
+      name: string;
+      status: ChatbotStatus;
+      messages: number;
+      documents: number;
+      storageBytes: number;
+      indexBytes: number;
+    }[];
+  };
+};
+
+/** Channels a guest can rate or report from; Playground answers can't be reported. */
+export type GuestChannel = Exclude<AnalyticsChannel, "playground">;
+export type ReportReason = "inaccurate" | "unhelpful";
+export type ReportStatus = "open" | "resolved" | "dismissed";
+
+export type ReportedAnswer = {
+  id: string;
+  chatbotId: string;
+  question: string;
+  botAnswer: string;
+  comment: string;
+  reason: ReportReason;
+  channel: GuestChannel;
+  reportedAt: string;
+  status: ReportStatus;
+};
+
+/** GET /analytics/unanswered — one question the bot couldn't answer. */
+export type UnansweredEntry = {
+  id: string;
+  chatbotId: string;
+  question: string;
+  lastReply: string;
+  channel: AnalyticsChannel;
+  askedAt: string;
 };

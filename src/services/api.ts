@@ -12,6 +12,8 @@
 //   GET    /chatbots/:id                        -> Chatbot
 //   POST   /chatbots/:id/publish                -> Chatbot  (pending -> active)
 //   PATCH  /chatbots/:id  { status: "active"|"paused" } -> Chatbot
+//   PATCH  /chatbots/:id  { name, description }   -> Chatbot
+//   DELETE /chatbots/:id                        -> void (also its channels and chat log)
 //   POST   /chatbots/:id/chat  { question }     -> ChatAnswer (playground; any status)
 //   POST   /chatbots/:id/documents  AddDocumentsRequest -> Chatbot (new documents start processing)
 //   DELETE /chatbots/:id/documents/:docId        -> Chatbot
@@ -26,14 +28,24 @@
 //   POST   /chatbots/:id/channels/telegram  { token }     -> ChatbotChannels (server sets the webhook)
 //   DELETE /chatbots/:id/channels/telegram                -> ChatbotChannels
 //
+//   GET    /analytics?granularity=daily|weekly|monthly[&chatbotId=][&days=1..90]  -> Analytics
+//   GET    /analytics/unanswered?days=N[&chatbotId=]                 -> UnansweredEntry[] (newest first)
+//
 //   GET    /public/:token                        -> PublicChat (no auth; what a guest link shows)
 //   POST   /public/:token/chat  { question }     -> ChatAnswer, or 503 chatbot_unavailable when paused
 //   GET    /public/:token/documents/:docId/original -> as above; 403 unless sources are "Full document"
+//
+//   GET    /widget/:chatbotId?host=&color=&position=&welcome=&domains=
+//                                                -> WidgetChat (no auth; what public/widget.js shows on `host`)
+//   POST   /widget/:chatbotId/chat  { question, host, embed } -> ChatAnswer, or 503 chatbot_unavailable
 //
 // Errors come back as { message, code, field? } with a 4xx/5xx status.
 import { mockRequest, mockUpload, onMockChange } from "./mockServer";
 import {
   ApiError,
+  type Analytics,
+  type AnalyticsGranularity,
+  type UnansweredEntry,
   type AddDocumentsRequest,
   type ChatAnswer,
   type Chatbot,
@@ -43,6 +55,8 @@ import {
   type ModelCatalog,
   type PublicChat,
   type SavePublicLinkRequest,
+  type WidgetChat,
+  type WidgetEmbed,
   type SaveWidgetRequest,
   type UploadedFile,
   type UrlPreview,
@@ -126,9 +140,12 @@ export const api = {
   createChatbot: (body: CreateChatbotRequest) => request<Chatbot>("POST", "/chatbots", body),
   listChatbots: (signal?: AbortSignal) => request<Chatbot[]>("GET", "/chatbots", undefined, signal),
   getChatbot: (id: string, signal?: AbortSignal) => request<Chatbot>("GET", `/chatbots/${id}`, undefined, signal),
+  deleteChatbot: (id: string) => request<void>("DELETE", `/chatbots/${id}`),
   publishChatbot: (id: string) => request<Chatbot>("POST", `/chatbots/${id}/publish`),
   setChatbotStatus: (id: string, status: "active" | "paused") =>
     request<Chatbot>("PATCH", `/chatbots/${id}`, { status }),
+  editChatbotDetails: (id: string, body: { name: string; description: string }) =>
+    request<Chatbot>("PATCH", `/chatbots/${id}`, body),
   askPlayground: (id: string, question: string, signal?: AbortSignal) =>
     request<ChatAnswer>("POST", `/chatbots/${id}/chat`, { question }, signal),
   addDocuments: (id: string, body: AddDocumentsRequest) => request<Chatbot>("POST", `/chatbots/${id}/documents`, body),
@@ -141,6 +158,34 @@ export const api = {
     request<PublicChat>("GET", `/public/${token}`, undefined, signal),
   askPublic: (token: string, question: string, signal?: AbortSignal) =>
     request<ChatAnswer>("POST", `/public/${token}/chat`, { question }, signal),
+  /** `embed`: the settings in the embed code, used when the widget's own storage has none (another site). */
+  getWidgetChat: (chatbotId: string, host: string, signal?: AbortSignal, embed?: Partial<WidgetEmbed>) => {
+    const query = new URLSearchParams({ host });
+    if (embed?.primaryColor) query.set("color", embed.primaryColor);
+    if (embed?.position) query.set("position", embed.position);
+    if (embed?.welcomeMessage) query.set("welcome", embed.welcomeMessage);
+    if (embed?.allowedDomains?.length) query.set("domains", embed.allowedDomains.join(","));
+    return request<WidgetChat>("GET", `/widget/${chatbotId}?${query}`, undefined, signal);
+  },
+  askWidget: (chatbotId: string, host: string, question: string, signal?: AbortSignal, embed?: Partial<WidgetEmbed>) =>
+    request<ChatAnswer>("POST", `/widget/${chatbotId}/chat`, { question, host, embed }, signal),
+
+  /** `days` sets the length of the daily trend (default 14). */
+  getAnalytics: (granularity: AnalyticsGranularity, chatbotId: string | null, signal?: AbortSignal, days?: number) =>
+    request<Analytics>(
+      "GET",
+      `/analytics?granularity=${granularity}${chatbotId ? `&chatbotId=${encodeURIComponent(chatbotId)}` : ""}${days ? `&days=${days}` : ""}`,
+      undefined,
+      signal,
+    ),
+
+  getUnanswered: (days: number, chatbotId: string | null, signal?: AbortSignal) =>
+    request<UnansweredEntry[]>(
+      "GET",
+      `/analytics/unanswered?days=${days}${chatbotId ? `&chatbotId=${encodeURIComponent(chatbotId)}` : ""}`,
+      undefined,
+      signal,
+    ),
 
   getChannels: (id: string, signal?: AbortSignal) =>
     request<ChatbotChannels>("GET", `/chatbots/${id}/channels`, undefined, signal),

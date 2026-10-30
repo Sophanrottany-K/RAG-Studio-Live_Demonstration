@@ -29,17 +29,22 @@ import {
   type ChatbotDocument,
   type CreateChatbotRequest,
   type DocumentOriginal,
+  type AnalyticsChannel,
+  type AnalyticsGranularity,
   type ModelCatalog,
   type PublicChat,
   type SavePublicLinkRequest,
   type SaveWidgetRequest,
   type UploadedFile,
   type UrlPreview,
+  type WidgetChat,
+  type WidgetEmbed,
 } from "./types";
 import { DEMO_DOCUMENTS } from "./demoDocuments";
 import { HR_DOCUMENTS, loadSeedFile } from "./hrDocuments";
 import { fileStore } from "./documentStore";
 import { extractText } from "./extractText";
+import { computeAnalytics, computeUnanswered, type ChatEvent } from "./mockAnalytics";
 
 const DB_KEY = "rag-studio-mock-db";
 
@@ -99,7 +104,10 @@ type Db = {
   chatbots: StoredChatbot[];
   uploads: Record<string, UploadedFile>;
   channels: Record<string, ChatbotChannels>;
+  /** Chat log behind GET /analytics; the newest CHAT_LOG_MAX questions are kept. */
+  events: ChatEvent[];
 };
+const CHAT_LOG_MAX = 5000;
 
 /** The chatbot shown on the original demo screens. It is always present, already published. */
 export const DEMO_CHATBOT_ID = "demo_billing";
@@ -219,7 +227,7 @@ function demoChatbot(): StoredChatbot {
 }
 
 function loadDb(): Db {
-  let db: Db = { chatbots: [], uploads: {}, channels: {} };
+  let db: Db = { chatbots: [], uploads: {}, channels: {}, events: [] };
   try {
     const raw = localStorage.getItem(DB_KEY);
     if (raw) db = { ...db, ...(JSON.parse(raw) as Partial<Db>) };
@@ -424,6 +432,9 @@ function withChannels(chatbotId: string, change?: (c: ChatbotChannels, name: str
   if (!bot) throw new ApiError("Chatbot not found.", 404, "not_found");
   const name = bot.name;
   const channels = db.channels[chatbotId] ?? defaultChannels(chatbotId, name);
+  // Widgets generated before widget.js existed still carry the placeholder CDN address.
+  if (channels.widget.embedCode?.includes("cdn.ragstudio.app"))
+    channels.widget.embedCode = widgetSnippet(chatbotId, channels.widget);
   if (change) {
     change(channels, name);
     db.channels[chatbotId] = channels;
@@ -471,20 +482,93 @@ function saveWidget(chatbotId: string, body: SaveWidgetRequest) {
   if (domains.some((d) => !d)) throw new ApiError("One of the domains is not valid.", 422, "invalid", "allowedDomains");
   if (domains.length > ALLOWED_DOMAINS_MAX)
     throw new ApiError(`At most ${ALLOWED_DOMAINS_MAX} domains.`, 422, "invalid", "allowedDomains");
+  const settings: SaveWidgetRequest = {
+    primaryColor: body.primaryColor,
+    position: body.position,
+    welcomeMessage: body.welcomeMessage.trim(),
+    allowedDomains: [...new Set(domains as string[])],
+  };
   return withChannels(chatbotId, (c) => {
     const first = !c.widget.configured;
     c.widget = {
       ...c.widget,
-      primaryColor: body.primaryColor,
-      position: body.position,
-      welcomeMessage: body.welcomeMessage.trim(),
-      allowedDomains: [...new Set(domains as string[])],
+      ...settings,
       configured: true,
       enabled: first ? true : c.widget.enabled,
-      embedCode: `<script src="https://cdn.ragstudio.app/widget.js"\n  data-chatbot-id="${chatbotId}" async></script>`,
+      embedCode: widgetSnippet(chatbotId, settings),
       updatedAt: new Date().toISOString(),
     };
   });
+}
+
+const escapeAttr = (value: string) =>
+  value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/**
+ * The loader is public/widget.js, served by this app, so the snippet points at wherever the app runs. It also
+ * carries the widget settings: on another site the widget's iframe gets its own (empty) browser storage, so
+ * it can't read what was saved here and falls back to these (see `findWidget`).
+ */
+const widgetSnippet = (chatbotId: string, w: WidgetEmbed) =>
+  `<script src="${location.origin}${location.pathname.replace(/[^/]*$/, "")}widget.js"\n` +
+  `  data-chatbot-id="${chatbotId}"\n` +
+  `  data-color="${escapeAttr(w.primaryColor)}" data-position="${w.position}"\n` +
+  `  data-welcome="${escapeAttr(w.welcomeMessage)}"\n` +
+  `  data-domains="${escapeAttr(w.allowedDomains.join(","))}" async></script>`;
+
+/** The settings from the embed code, checked like a save; null when missing or not valid. */
+function embeddedWidget(embed?: Partial<WidgetEmbed>): WidgetEmbed | null {
+  if (!embed?.primaryColor || !isHexColor(embed.primaryColor)) return null;
+  const domains = (embed.allowedDomains ?? []).map(normalizeDomain);
+  if (!domains.length || domains.some((d) => !d)) return null;
+  return {
+    primaryColor: embed.primaryColor,
+    position: embed.position === "bottom-left" ? "bottom-left" : "bottom-right",
+    welcomeMessage: (embed.welcomeMessage ?? "").slice(0, WELCOME_MESSAGE_MAX),
+    allowedDomains: domains as string[],
+  };
+}
+
+/** Whether the site at `host` (e.g. "localhost:3000", "shop.example.com") is one of the allowed domains. */
+function hostAllowed(host: string, allowed: string[]) {
+  const full = host.toLowerCase();
+  const name = full.replace(/:\d+$/, "");
+  return allowed.some((d) =>
+    d.startsWith("*.") ? name === d.slice(2) || name.endsWith(d.slice(1)) : d === full || d === name,
+  );
+}
+
+function findWidget(chatbotId: string, host: string, embed?: Partial<WidgetEmbed>) {
+  const db = loadDb();
+  const stored = db.chatbots.find((b) => b.id === chatbotId);
+  if (!stored) throw new ApiError("Chatbot not found.", 404, "not_found");
+  const bot = toChatbot(stored);
+  let widget = (db.channels[chatbotId] ?? defaultChannels(chatbotId, bot.name)).widget;
+  // Saved settings win (same browser storage, e.g. a test site on localhost); otherwise use the embed code's.
+  const embedded = !widget.configured && embeddedWidget(embed);
+  if (embedded) widget = { ...widget, ...embedded, configured: true, enabled: true };
+  const reason: WidgetChat["reason"] = !widget.configured
+    ? "not_configured"
+    : !widget.enabled
+      ? "disabled"
+      : !hostAllowed(host, widget.allowedDomains)
+        ? "domain_not_allowed"
+        : bot.status === "paused"
+          ? "paused"
+          : bot.status !== "active"
+            ? "not_published"
+            : undefined;
+  const chat: WidgetChat = {
+    chatbotName: bot.name,
+    primaryColor: widget.primaryColor,
+    position: widget.position,
+    welcomeMessage: widget.welcomeMessage,
+    starterQuestions: bot.settings.starterQuestions,
+    sourceVisibility: bot.settings.sourceVisibility,
+    available: !reason,
+    ...(reason && { reason }),
+  };
+  return { bot, chat };
 }
 
 function connectTelegram(chatbotId: string, token: string) {
@@ -569,6 +653,20 @@ const setChatbotStatus = (chatbotId: string, status: unknown) =>
       throw new ApiError("Status must be active or paused.", 422, "invalid", "status");
     if (!bot.published) throw new ApiError("Publish the chatbot first.", 409, "not_published");
     bot.published = status;
+  });
+
+/** Renames a chatbot or changes its description; the same rules as when it was created. */
+const editChatbotDetails = (chatbotId: string, body: { name?: unknown; description?: unknown }) =>
+  updateChatbot(chatbotId, (bot) => {
+    if (typeof body.name !== "string" || typeof body.description !== "string")
+      throw new ApiError("Send a name and a description.", 422, "invalid");
+    const name = body.name.trim();
+    if (name.length < NAME_MIN || name.length > NAME_MAX)
+      throw new ApiError(`Name must be ${NAME_MIN}–${NAME_MAX} characters.`, 422, "invalid", "name");
+    if (body.description.length > DESCRIPTION_MAX)
+      throw new ApiError("Description is too long.", 422, "invalid", "description");
+    bot.name = name;
+    bot.description = body.description.trim();
   });
 
 // ---- Knowledge base ---------------------------------------------------------------------
@@ -780,6 +878,87 @@ function findPublic(token: string) {
   throw new ApiError("This link doesn't exist or was replaced by a new one.", 404, "link_not_found");
 }
 
+/** A stable id for this browser, so a guest's questions group into sessions. */
+function guestId() {
+  try {
+    let guest = localStorage.getItem("rag-studio-guest-id");
+    if (!guest) localStorage.setItem("rag-studio-guest-id", (guest = id("guest")));
+    return guest;
+  } catch {
+    return "guest";
+  }
+}
+
+function logChat(chatbotId: string, channel: AnalyticsChannel, visitor: string, question: unknown, answer: ChatAnswer) {
+  const db = loadDb();
+  db.events.push({
+    chatbotId,
+    channel,
+    visitor,
+    at: Date.now(),
+    question: typeof question === "string" ? question.slice(0, 300) : "",
+    answered: answer.answered,
+    sources: answer.sources.length,
+    reply: answer.answer.slice(0, 300),
+  });
+  db.events = db.events.slice(-CHAT_LOG_MAX);
+  saveDb(db);
+}
+
+/** Removes a chatbot with its channels and chat log. The two built-in demo chatbots stay. */
+function deleteChatbot(id: string) {
+  const db = loadDb();
+  if (!db.chatbots.some((c) => c.id === id)) throw new ApiError("Chatbot not found.", 404, "not_found");
+  if (id === DEMO_CHATBOT_ID || id === HR_CHATBOT_ID)
+    throw new ApiError("The built-in demo chatbots can't be deleted.", 409, "conflict");
+  db.chatbots = db.chatbots.filter((c) => c.id !== id);
+  delete db.channels[id];
+  db.events = db.events.filter((e) => e.chatbotId !== id);
+  saveDb(db);
+}
+
+const GRANULARITIES: AnalyticsGranularity[] = ["daily", "weekly", "monthly"];
+
+function analytics(params: URLSearchParams) {
+  const granularity = (params.get("granularity") ?? "daily") as AnalyticsGranularity;
+  if (!GRANULARITIES.includes(granularity))
+    throw new ApiError("granularity must be daily, weekly or monthly.", 422, "invalid", "granularity");
+  const db = loadDb();
+  const chatbotId = params.get("chatbotId");
+  if (chatbotId && !db.chatbots.some((c) => c.id === chatbotId))
+    throw new ApiError("Chatbot not found.", 404, "not_found");
+  const days = Number(params.get("days") ?? 14);
+  if (!Number.isInteger(days) || days < 1 || days > 90)
+    throw new ApiError("days must be a whole number from 1 to 90.", 422, "invalid", "days");
+  const now = Date.now();
+  return computeAnalytics(
+    db.chatbots.map((c) => toChatbot(c, now)),
+    db.events,
+    granularity,
+    chatbotId,
+    now,
+    days,
+  );
+}
+
+function unanswered(params: URLSearchParams) {
+  const days = Number(params.get("days") ?? 30);
+  if (!Number.isInteger(days) || days < 1 || days > 365)
+    throw new ApiError("days must be a whole number from 1 to 365.", 422, "invalid", "days");
+  const db = loadDb();
+  const chatbotId = params.get("chatbotId");
+  if (chatbotId && !db.chatbots.some((c) => c.id === chatbotId))
+    throw new ApiError("Chatbot not found.", 404, "not_found");
+  const now = Date.now();
+  return computeUnanswered(
+    db.chatbots.map((c) => toChatbot(c, now)),
+    db.events,
+    chatbotId,
+    days,
+    now,
+  );
+}
+
 /** Handles a JSON request the way the real server would. */
 export async function mockRequest<T>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   await latency(signal);
@@ -791,18 +970,27 @@ export async function mockRequest<T>(method: string, path: string, body?: unknow
   if (route === "POST /sources/url-preview") return previewUrl((body as { url: string }).url) as T;
   if (route === "POST /chatbots") return (await createChatbot(body as CreateChatbotRequest)) as T;
   if (route === "GET /chatbots") return loadDb().chatbots.map((c) => toChatbot(c)) as T;
+  if (route === "GET /analytics") return analytics(url.searchParams) as T;
+  if (route === "GET /analytics/unanswered") return unanswered(url.searchParams) as T;
   if ((match = url.pathname.match(/^\/chatbots\/([\w-]+)\/channels(\/.*)?$/))) {
     const result = channelsRoute(method, match[1], match[2] ?? "", body);
     if (result) return result as T;
   }
   if ((match = route.match(/^POST \/chatbots\/([\w-]+)\/publish$/))) return publishChatbot(match[1]) as T;
   if ((match = route.match(/^PATCH \/chatbots\/([\w-]+)$/)))
-    return setChatbotStatus(match[1], (body as { status?: unknown })?.status) as T;
+    return (
+      body && typeof body === "object" && "name" in body
+        ? editChatbotDetails(match[1], body as { name?: unknown; description?: unknown })
+        : setChatbotStatus(match[1], (body as { status?: unknown })?.status)
+    ) as T;
   if ((match = route.match(/^POST \/chatbots\/([\w-]+)\/chat$/))) {
     const found = loadDb().chatbots.find((c) => c.id === match![1]);
     if (!found) throw new ApiError("Chatbot not found.", 404, "not_found");
     await latency(signal, 700, 1400); // "thinking"
-    return (await answerFor(toChatbot(found), (body as { question?: unknown })?.question)) as T;
+    const question = (body as { question?: unknown })?.question;
+    const answer = await answerFor(toChatbot(found), question);
+    logChat(found.id, "playground", "owner", question, answer);
+    return answer as T;
   }
   if ((match = route.match(/^POST \/chatbots\/([\w-]+)\/documents$/)))
     return (await addDocuments(match[1], body as AddDocumentsRequest)) as T;
@@ -819,18 +1007,45 @@ export async function mockRequest<T>(method: string, path: string, body?: unknow
       throw new ApiError("The owner doesn't share source documents.", 403, "forbidden");
     return (await documentOriginal(bot, match[2])) as T;
   }
+  if ((match = route.match(/^GET \/widget\/([\w-]+)$/))) {
+    const q = url.searchParams;
+    const embed: Partial<WidgetEmbed> = {
+      primaryColor: q.get("color") ?? undefined,
+      position: (q.get("position") ?? undefined) as WidgetEmbed["position"] | undefined,
+      welcomeMessage: q.get("welcome") ?? undefined,
+      allowedDomains: q.get("domains")?.split(",").filter(Boolean),
+    };
+    return findWidget(match[1], q.get("host") ?? "", embed).chat as T;
+  }
+  if ((match = route.match(/^POST \/widget\/([\w-]+)\/chat$/))) {
+    const { question, host, embed } = (body ?? {}) as { question?: unknown; host?: unknown; embed?: unknown };
+    const { bot, chat } = findWidget(
+      match[1],
+      typeof host === "string" ? host : "",
+      embed && typeof embed === "object" ? (embed as Partial<WidgetEmbed>) : undefined,
+    );
+    if (!chat.available) throw new ApiError("This chatbot is temporarily unavailable.", 503, "chatbot_unavailable");
+    await latency(signal, 700, 1400);
+    const answer = await answerFor(bot, question);
+    logChat(bot.id, "widget", guestId(), question, answer);
+    return answer as T;
+  }
   if ((match = route.match(/^GET \/public\/([\w-]+)$/))) return findPublic(match[1]).chat as T;
   if ((match = route.match(/^POST \/public\/([\w-]+)\/chat$/))) {
     const { bot, chat } = findPublic(match[1]);
     if (!chat.available) throw new ApiError("This chatbot is temporarily unavailable.", 503, "chatbot_unavailable");
     await latency(signal, 700, 1400);
-    return (await answerFor(bot, (body as { question?: unknown })?.question)) as T;
+    const question = (body as { question?: unknown })?.question;
+    const answer = await answerFor(bot, question);
+    logChat(bot.id, "public-link", guestId(), question, answer);
+    return answer as T;
   }
   if ((match = route.match(/^GET \/chatbots\/([\w-]+)$/))) {
     const found = loadDb().chatbots.find((c) => c.id === match![1]);
     if (!found) throw new ApiError("Chatbot not found.", 404, "not_found");
     return toChatbot(found) as T;
   }
+  if ((match = route.match(/^DELETE \/chatbots\/([\w-]+)$/))) return deleteChatbot(match[1]) as T;
   if ((match = route.match(/^DELETE \/uploads\/([\w-]+)$/))) {
     const db = loadDb();
     delete db.uploads[match[1]];

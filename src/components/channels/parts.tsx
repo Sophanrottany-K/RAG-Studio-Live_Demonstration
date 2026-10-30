@@ -1,9 +1,7 @@
 // Building blocks shared by the three channel cards (public link, web widget, Telegram).
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { isHexColor } from "../../services/limits";
+import { useId, useState, type ReactNode } from "react";
 import { ApiError } from "../../services/types";
 import { errorMessage } from "../../services/api";
-import { Button } from "../create/ui";
 
 export function formatDateTime(iso: string | null) {
   if (!iso) return "";
@@ -40,16 +38,13 @@ export function ChannelCard({
   state: ChannelState;
   children: ReactNode;
 }) {
-  const [open, setOpen] = useState(true);
+  // Details stay hidden until the arrow in the top right corner is clicked.
+  const [open, setOpen] = useState(false);
+  const detailsId = useId();
   const style = STATE_STYLE[state];
   return (
     <section className="self-stretch shrink-0 bg-bg-card border border-border-default rounded-[20px] flex flex-col items-start gap-5 p-7">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        className="self-stretch flex items-center gap-4 text-left cursor-pointer"
-      >
+      <div className="self-stretch flex items-center gap-4">
         <img className="w-12 h-12 shrink-0" src={icon} alt="" />
         <div className="flex-1 min-w-0 flex flex-col items-start gap-1">
           <h3 className="font-gabarito font-bold text-[20px] leading-normal text-ink-primary">{title}</h3>
@@ -61,13 +56,26 @@ export function ChannelCard({
           <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
           {style.label}
         </span>
-        <img
-          className={`w-6 h-6 shrink-0 transition-transform ${open ? "" : "-rotate-90"}`}
-          src="icons/icon-chevron-down-3.svg"
-          alt=""
-        />
-      </button>
-      {open && children}
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={detailsId}
+          aria-label={`${open ? "Hide" : "Show"} ${title} details`}
+          onClick={() => setOpen((o) => !o)}
+          className="shrink-0 rounded-[8px] p-1 cursor-pointer hover:bg-bg-soft"
+        >
+          <img
+            className={`w-6 h-6 transition-transform ${open ? "" : "-rotate-90"}`}
+            src="icons/icon-chevron-down-3.svg"
+            alt=""
+          />
+        </button>
+      </div>
+      {open && (
+        <div id={detailsId} className="self-stretch flex flex-col items-start gap-5">
+          {children}
+        </div>
+      )}
     </section>
   );
 }
@@ -77,87 +85,5 @@ export function SubTitle({ children }: { children: ReactNode }) {
     <div className="font-gabarito font-bold text-[12px] leading-normal tracking-[0.08em] uppercase text-ink-muted">
       {children}
     </div>
-  );
-}
-
-export function Divider() {
-  return <div className="self-stretch h-px shrink-0 bg-border-default" />;
-}
-
-/** Native color picker plus an editable hex field, kept in sync. */
-export function ColorField({
-  id,
-  value,
-  onChange,
-  invalid,
-}: {
-  id: string;
-  value: string;
-  onChange: (hex: string) => void;
-  invalid?: boolean;
-}) {
-  const [text, setText] = useState(value);
-  useEffect(() => setText(value), [value]);
-  return (
-    <div className="flex items-center gap-2.5">
-      <label className="shrink-0 bg-bg-card border border-border-default rounded-[10px] p-1 cursor-pointer">
-        <span className="sr-only">Pick a color</span>
-        <input
-          type="color"
-          value={isHexColor(value) ? value : "#111111"}
-          onChange={(e) => onChange(e.target.value)}
-          className="sr-only"
-        />
-        <span className="block w-9 h-6 rounded-[6px]" style={{ background: isHexColor(value) ? value : "#111111" }} />
-      </label>
-      <input
-        id={id}
-        value={text}
-        maxLength={7}
-        spellCheck={false}
-        aria-invalid={invalid || undefined}
-        onChange={(e) => {
-          const next = e.target.value.startsWith("#") ? e.target.value : `#${e.target.value}`;
-          setText(next);
-          onChange(next);
-        }}
-        className={`w-28 h-10 bg-bg-card border rounded-[10px] px-3 font-roboto-mono text-[13px] text-ink-body focus:outline-none focus:border-ink-primary focus:ring-1 focus:ring-ink-primary ${
-          invalid ? "border-danger-solid" : "border-border-default"
-        }`}
-      />
-    </div>
-  );
-}
-
-/** Copies text and briefly confirms; falls back to selecting the text if the clipboard is blocked. */
-export function CopyButton({
-  text,
-  label,
-  variant = "primary",
-  fallbackTarget,
-}: {
-  text: string;
-  label: string;
-  variant?: "primary" | "secondary";
-  fallbackTarget?: () => HTMLElement | null;
-}) {
-  const [copied, setCopied] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
-  useEffect(() => () => clearTimeout(timer.current), []);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      clearTimeout(timer.current);
-      timer.current = setTimeout(() => setCopied(false), 1800);
-    } catch {
-      const el = fallbackTarget?.();
-      if (el) window.getSelection()?.selectAllChildren(el);
-    }
-  };
-  return (
-    <Button variant={variant} onClick={copy}>
-      {copied ? "Copied ✓" : label}
-    </Button>
   );
 }

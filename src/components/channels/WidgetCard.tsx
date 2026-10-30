@@ -1,345 +1,474 @@
-import { useRef, useState } from "react";
-import { api } from "../../services/api";
-import { ALLOWED_DOMAINS_MAX, WELCOME_MESSAGE_MAX, isHexColor, normalizeDomain } from "../../services/limits";
-import type { ChatbotChannels, WidgetChannel, WidgetPosition } from "../../services/types";
-import { Banner, Button, ChipGroup, Field, TextArea, TextInput } from "../create/ui";
-import { ChannelCard, ColorField, CopyButton, Divider, SubTitle, formatDateTime, splitError } from "./parts";
+// Web Widget channel card, laid out as in the RAG Studio web app
+// (features/channels/components/web-widget-card.tsx): color and allowed domains with a live preview,
+// then the embed code, which only appears once "Save and generate widget code" has been clicked.
+// Flow follows web-widget-workflow.png: an enabled widget shows the install steps, a disabled one says so.
+import { useState } from "react";
+import { ArrowUp, ChevronDown, FileText, Lock, MessageCircleMore, Mic, X } from "lucide-react";
+import { api, errorMessage } from "../../services/api";
+import { ALLOWED_DOMAINS_MAX, isHexColor, normalizeDomain } from "../../services/limits";
+import type { ChatbotChannels, WidgetChannel } from "../../services/types";
+import { ChannelCard, formatDateTime } from "./parts";
+import {
+  ColorSetting,
+  Notice,
+  SectionLabel,
+  buttonStyles,
+  codeBlockStyles,
+  cx,
+  fieldStyles,
+  labelStyles,
+  useFeedback,
+} from "./ui";
 
-const POSITIONS = ["Bottom right", "Bottom left"] as const;
-const toPosition = (label: (typeof POSITIONS)[number]): WidgetPosition =>
-  label === "Bottom left" ? "bottom-left" : "bottom-right";
-const toLabel = (position: WidgetPosition) => (position === "bottom-left" ? "Bottom left" : "Bottom right");
+const PREVIEW_DOMAIN = "shop.example.com";
 
 const INSTALL_STEPS = [
-  "Copy the embed code above.",
-  "Open the HTML of your site (or your site builder's custom code settings).",
-  "Paste the snippet just before the closing </body> tag on every page that should show the chat.",
-  "Publish, then open your site from an allowed domain — the launcher appears in the corner you picked.",
+  {
+    title: "Allow your website's domain",
+    text: "In Allowed domains above, add the address your website runs on, without http:// — e.g. localhost:3000 while you develop, or shop.example.com once it's online. Then click Save and generate widget code.",
+  },
+  {
+    title: "Copy the embed code",
+    text: "Click Copy code above. The snippet already includes your chatbot ID — don't edit it.",
+  },
+  {
+    title: "Paste it into your website, just before </body>",
+    text: "Plain HTML or Vite/React: index.html. WordPress: a header & footer code plugin (Footer). Wix, Squarespace, Shopify: Settings → Custom code → Footer. Next.js: the root app/layout.tsx with next/script.",
+  },
+  {
+    title: "Keep RAG Studio running",
+    text: "The script is served by RAG Studio (this app), so keep it running while you use the widget, e.g. npm run dev.",
+  },
+  {
+    title: "Open your website",
+    text: "Refresh the page. The chat bubble appears in the bottom corner; click it to chat. Nothing there? Open the browser console: the widget explains why (domain not allowed, widget disabled…).",
+  },
 ];
 
-function WidgetPreview({
-  color,
-  position,
-  welcome,
-  domain,
-}: {
-  color: string;
-  position: WidgetPosition;
-  welcome: string;
-  domain: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const side = position === "bottom-left" ? "left-4" : "right-4";
-  const safeColor = isHexColor(color) ? color : "#111111";
-  return (
-    <div className="w-85 shrink-0 bg-bg-card border border-border-default rounded-[16px] overflow-hidden flex flex-col">
-      <div className="shrink-0 bg-[#F5F5F3] flex items-center gap-2.5 px-3 py-2.5">
-        <div className="shrink-0 flex items-start gap-[5px]">
-          <div className="w-2 h-2 bg-[#D4D4D0] rounded-full" />
-          <div className="w-2 h-2 bg-[#D4D4D0] rounded-full" />
-          <div className="w-2 h-2 bg-[#D4D4D0] rounded-full" />
-        </div>
-        <div className="flex-1 min-w-0 bg-[#FFFFFF] border border-[#E4E4E0] rounded-full px-3 py-[5px] truncate font-gabarito text-[11px] text-[#6B6B6B]">
-          {domain}
-        </div>
-      </div>
-      <div className="relative h-80 bg-[#FAFAF9]">
-        <div className="absolute inset-x-5 top-5 flex flex-col gap-2.5">
-          <div className="h-3 w-2/3 rounded-full bg-[#ECECE8]" />
-          <div className="h-3 w-full rounded-full bg-[#F0F0EC]" />
-          <div className="h-3 w-5/6 rounded-full bg-[#F0F0EC]" />
-        </div>
-        {open && (
-          <div
-            className={`absolute bottom-[76px] ${side} w-60 bg-bg-card border border-border-default rounded-[14px] shadow-[0px_8px_24px_0px_#0000001F] overflow-hidden flex flex-col`}
-          >
-            <div
-              className="px-3.5 py-2.5 font-gabarito font-bold text-[13px] text-white"
-              style={{ background: safeColor }}
-            >
-              Chat with us
-            </div>
-            <div className="px-3.5 py-3 flex flex-col gap-2">
-              <div className="self-start max-w-[90%] bg-bg-soft rounded-[10px] px-2.5 py-1.5 font-gabarito text-[12px] text-ink-body break-words">
-                {welcome.trim() || "Hi! How can I help?"}
-              </div>
-            </div>
-            <div className="mx-3 mb-3 border border-border-default rounded-full px-3 py-1.5 font-gabarito text-[11px] text-ink-muted">
-              Type your question…
-            </div>
-          </div>
-        )}
-        <button
-          type="button"
-          aria-label={open ? "Close chat preview" : "Open chat preview"}
-          onClick={() => setOpen((o) => !o)}
-          className={`absolute bottom-4 ${side} w-12 h-12 rounded-full flex items-center justify-center text-white text-[20px] shadow-[0px_4px_12px_0px_#00000033] cursor-pointer`}
-          style={{ background: safeColor }}
-        >
-          {open ? "×" : "💬"}
-        </button>
-      </div>
-      <div className="shrink-0 px-3.5 py-2.5 border-t border-border-default font-gabarito text-[12px] text-ink-muted">
-        Live preview · click the launcher
-      </div>
-    </div>
-  );
+/** Black text on light colors, white on dark ones. */
+function isLightColor(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  return (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255 > 0.6;
 }
 
 export function WidgetCard({
   chatbotId,
   widget,
   onSaved,
+  chatbotName = "Your chatbot",
   chatbotPaused = false,
 }: {
   chatbotId: string;
+  /** Shown in the header of the previewed chat window. */
+  chatbotName?: string;
   widget: WidgetChannel;
   onSaved: (c: ChatbotChannels) => void;
   chatbotPaused?: boolean;
 }) {
-  const codeRef = useRef<HTMLPreElement>(null);
   const [color, setColor] = useState(widget.primaryColor);
-  const [position, setPosition] = useState<WidgetPosition>(widget.position);
-  const [welcome, setWelcome] = useState(widget.welcomeMessage);
   const [domains, setDomains] = useState<string[]>(widget.allowedDomains);
-  const [domainText, setDomainText] = useState("");
+  const [domainInput, setDomainInput] = useState("");
   const [domainError, setDomainError] = useState<string | null>(null);
   const [busy, setBusy] = useState<null | "save" | "toggle">(null);
-  const [fieldError, setFieldError] = useState<{ field: string | null; message: string } | null>(null);
-  const [guideOpen, setGuideOpen] = useState(false);
-
-  const dirty =
-    color !== widget.primaryColor ||
-    position !== widget.position ||
-    welcome !== widget.welcomeMessage ||
-    domains.join(",") !== widget.allowedDomains.join(",");
-  const errorFor = (field: string) => (fieldError?.field === field ? fieldError.message : null);
+  const [copied, setCopied] = useState(false);
+  // True after any change to color or domains, until "Save and generate widget code" succeeds.
+  const [edited, setEdited] = useState(false);
+  const settingsFeedback = useFeedback();
+  const codeFeedback = useFeedback();
 
   const addDomain = () => {
-    if (!domainText.trim()) return;
-    const parts = domainText.split(/[\s,]+/).filter(Boolean);
-    const next = [...domains];
-    for (const part of parts) {
-      const domain = normalizeDomain(part);
-      if (!domain)
-        return setDomainError(`“${part}” isn't a valid domain. Use something like shop.example.com or *.example.com.`);
-      if (!next.includes(domain)) next.push(domain);
+    const domain = normalizeDomain(domainInput);
+    if (!domain) return setDomainError("Enter a domain like example.com.");
+    if (!domains.includes(domain) && domains.length >= ALLOWED_DOMAINS_MAX)
+      return setDomainError(`You can add at most ${ALLOWED_DOMAINS_MAX} domains.`);
+    if (!domains.includes(domain)) {
+      setDomains([...domains, domain]);
+      setEdited(true);
     }
-    if (next.length > ALLOWED_DOMAINS_MAX) return setDomainError(`You can add at most ${ALLOWED_DOMAINS_MAX} domains.`);
-    setDomains(next);
-    setDomainText("");
+    setDomainInput("");
     setDomainError(null);
-    if (fieldError?.field === "allowedDomains") setFieldError(null);
+    settingsFeedback.show({ tone: "success", text: `${domain} added.` });
   };
 
-  const run = async (kind: NonNullable<typeof busy>, call: () => Promise<ChatbotChannels>, fields: string[] = []) => {
-    setBusy(kind);
-    setFieldError(null);
+  const removeDomain = (domain: string) => {
+    setDomains(domains.filter((d) => d !== domain));
+    setEdited(true);
+    settingsFeedback.show({ tone: "success", text: `${domain} removed.` });
+  };
+
+  const save = async () => {
+    if (!isHexColor(color)) return settingsFeedback.show({ tone: "danger", text: "Use a hex color like #111111." });
+    setBusy("save");
     try {
-      onSaved(await call());
+      onSaved(
+        await api.saveWidget(chatbotId, {
+          primaryColor: color,
+          position: widget.position,
+          welcomeMessage: widget.welcomeMessage,
+          allowedDomains: domains,
+        }),
+      );
+      setEdited(false);
+      settingsFeedback.show({ tone: "success", text: "Widget code generated." });
     } catch (e) {
-      setFieldError(splitError(e, fields));
+      settingsFeedback.show({ tone: "danger", text: errorMessage(e) });
     } finally {
       setBusy(null);
     }
   };
 
-  const save = () => {
-    if (!isHexColor(color)) return setFieldError({ field: "primaryColor", message: "Use a hex color like #111111." });
-    if (!domains.length)
-      return setFieldError({ field: "allowedDomains", message: "Add at least one domain where the widget may load." });
-    run(
-      "save",
-      () =>
-        api.saveWidget(chatbotId, { primaryColor: color, position, welcomeMessage: welcome, allowedDomains: domains }),
-      ["primaryColor", "welcomeMessage", "allowedDomains"],
-    );
+  const copyCode = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+      codeFeedback.show({ tone: "success", text: "Embed code copied." });
+    } catch {
+      codeFeedback.show({ tone: "danger", text: "Could not copy. Select the text and copy it yourself." });
+    }
+  };
+
+  const toggle = async () => {
+    const enabling = !widget.enabled;
+    setBusy("toggle");
+    try {
+      onSaved(await api.setChannelEnabled(chatbotId, "widget", enabling));
+      codeFeedback.show({
+        tone: "success",
+        text: enabling
+          ? "Widget enabled. It now shows on your allowed domains."
+          : "Widget disabled. It no longer shows on your website.",
+      });
+    } catch (e) {
+      codeFeedback.show({ tone: "danger", text: errorMessage(e) });
+    } finally {
+      setBusy(null);
+    }
   };
 
   const state = !widget.configured ? "off" : !widget.enabled ? "paused" : chatbotPaused ? "chatbotPaused" : "live";
   const subtitle = widget.configured
     ? `${widget.messagesThisWeek} inbound messages this week · Updated ${formatDateTime(widget.updatedAt)}`
     : "A chat bubble you embed on your own website";
+  // web-widget-workflow.png: Have domain? → Generate widget → Show JavaScript code box. Any edit hides the code
+  // until "Save and generate widget code" is clicked again, even if the edit is undone.
+  const snippet = edited ? null : widget.embedCode;
+  const canSave = domains.length > 0 && busy === null && (edited || !widget.embedCode);
 
   return (
     <ChannelCard icon="icons/channel-icon-2.svg" title="Web Widget" subtitle={subtitle} state={state}>
-      <div className="self-stretch flex items-start gap-6">
-        <form
-          className="flex-1 min-w-0 flex flex-col items-start gap-5"
-          noValidate
-          onSubmit={(e) => {
-            e.preventDefault();
-            save();
-          }}
-        >
-          <SubTitle>Appearance</SubTitle>
-          <div className="self-stretch flex items-start gap-6">
-            <div className="shrink-0">
-              <Field label="Primary color" htmlFor="widget-color" error={errorFor("primaryColor")}>
-                <ColorField id="widget-color" value={color} onChange={setColor} invalid={!!errorFor("primaryColor")} />
-              </Field>
-            </div>
-            <div className="shrink-0">
-              <Field label="Launcher position">
-                <ChipGroup
-                  label="Launcher position"
-                  options={POSITIONS}
-                  value={toLabel(position)}
-                  onChange={(v) => setPosition(toPosition(v))}
-                />
-              </Field>
-            </div>
-          </div>
-          <Field
-            label="Welcome message"
-            htmlFor="widget-welcome"
-            counter={`${welcome.length}/${WELCOME_MESSAGE_MAX}`}
-            error={errorFor("welcomeMessage")}
-            hint="The first message visitors see when they open the chat."
-          >
-            <TextArea
-              id="widget-welcome"
-              rows={2}
-              value={welcome}
-              maxLength={WELCOME_MESSAGE_MAX}
-              invalid={!!errorFor("welcomeMessage")}
-              onChange={(e) => setWelcome(e.target.value)}
+      <div className="self-stretch font-gabarito">
+        <div className="grid grid-cols-3 gap-8">
+          <div className="col-span-2 min-w-0">
+            <SectionLabel>{"Widget settings"}</SectionLabel>
+            <ColorSetting
+              label="Primary color"
+              value={color}
+              onChange={(hex) => {
+                setColor(hex);
+                setEdited(true);
+              }}
             />
-          </Field>
 
-          <SubTitle>Allowed domains</SubTitle>
-          <Field
-            label="Websites that may load the widget"
-            htmlFor="widget-domain"
-            counter={`${domains.length}/${ALLOWED_DOMAINS_MAX}`}
-            error={domainError ?? errorFor("allowedDomains")}
-            hint="Press Enter to add. Use *.example.com to allow every subdomain."
-          >
-            <div className="self-stretch flex items-start gap-2.5">
-              <TextInput
-                id="widget-domain"
-                className="flex-1 min-w-0"
-                placeholder="shop.example.com"
-                value={domainText}
-                invalid={!!(domainError ?? errorFor("allowedDomains"))}
-                onChange={(e) => {
-                  setDomainText(e.target.value);
-                  setDomainError(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addDomain();
-                  }
-                }}
-              />
-              <Button disabled={!domainText.trim()} onClick={addDomain}>
-                Add
-              </Button>
+            <div className="mt-5">
+              <label htmlFor="widget-domain" className={labelStyles}>
+                {"Allowed domains"}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="widget-domain"
+                  value={domainInput}
+                  placeholder="example.com"
+                  aria-invalid={domainError !== null}
+                  onChange={(e) => {
+                    setDomainInput(e.target.value);
+                    setDomainError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addDomain();
+                    }
+                  }}
+                  className={fieldStyles}
+                />
+                <button type="button" onClick={addDomain} className={cx(buttonStyles.outline, "h-12")}>
+                  {"Add domain"}
+                </button>
+              </div>
+              {domainError && <p className="text-c1 text-danger-text mt-2">{domainError}</p>}
+
+              {domains.length === 0 ? (
+                <p className="text-c1 text-ink-secondary mt-2">{"No allowed domains configured."}</p>
+              ) : (
+                <ul className="rounded-small border-line mt-2 divide-y divide-(--border-default) border">
+                  {domains.map((domain) => (
+                    <li key={domain} className="flex items-center justify-between gap-3 px-3 py-2">
+                      <span className="text-p4 text-ink font-bold">{domain}</span>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${domain}`}
+                        onClick={() => removeDomain(domain)}
+                        className={cx(buttonStyles.dangerSoft, "h-8 px-3")}
+                      >
+                        {"Remove"}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          </Field>
-          {domains.length > 0 && (
-            <ul className="self-stretch flex flex-col border border-border-default rounded-[12px] overflow-hidden">
-              {domains.map((domain) => (
-                <li
-                  key={domain}
-                  className="flex items-center gap-3 px-4 py-2.5 border-b border-border-default last:border-b-0"
-                >
-                  <span className="flex-1 min-w-0 truncate font-roboto-mono text-[13px] text-ink-primary">
-                    {domain}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label={`Remove ${domain}`}
-                    className="shrink-0 font-gabarito font-medium text-[13px] text-ink-secondary hover:text-danger-text cursor-pointer"
-                    onClick={() => setDomains((list) => list.filter((d) => d !== domain))}
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
 
-          {fieldError && !fieldError.field && <Banner tone="danger">{fieldError.message}</Banner>}
-          <div className="flex items-center gap-3">
-            <Button type="submit" variant="primary" loading={busy === "save"} disabled={widget.configured && !dirty}>
-              {widget.configured ? "Save widget settings" : "Save and generate widget code"}
-            </Button>
-            {widget.configured && dirty && (
-              <span className="font-gabarito text-[13px] text-warning-text">Unsaved changes</span>
-            )}
-          </div>
-        </form>
-        <WidgetPreview
-          color={color}
-          position={position}
-          welcome={welcome}
-          domain={domains[0]?.replace(/^\*\./, "www.") ?? "your-site.com"}
-        />
-      </div>
-
-      <Divider />
-      <SubTitle>Embed code</SubTitle>
-      {!widget.embedCode ? (
-        <div className="self-stretch bg-bg-soft rounded-[12px] px-4 py-3 font-gabarito text-[14px] text-ink-body">
-          No embed code yet. Save your settings to generate the snippet.
-        </div>
-      ) : (
-        <div className="self-stretch flex flex-col items-start gap-3">
-          <pre
-            ref={codeRef}
-            className="self-stretch bg-[#111111] text-[#E9E9E6] rounded-[12px] px-4 py-3.5 font-roboto-mono text-[13px] leading-[20px] whitespace-pre-wrap break-all"
-          >
-            {widget.embedCode}
-          </pre>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <CopyButton text={widget.embedCode} label="Copy code" fallbackTarget={() => codeRef.current} />
-            <Button
-              loading={busy === "toggle"}
-              onClick={() => run("toggle", () => api.setChannelEnabled(chatbotId, "widget", !widget.enabled))}
-            >
-              {widget.enabled ? "Disable widget" : "Enable widget"}
-            </Button>
-          </div>
-          {!widget.enabled && (
-            <div className="font-gabarito text-[13px] text-ink-secondary">
-              The widget is disabled. The snippet stays installed but the launcher is hidden.
-            </div>
-          )}
-          <div className="self-stretch bg-[#FAFAF9] border border-[#E4E4E0] rounded-[16px] flex flex-col items-start px-4.5 py-3.5 gap-3">
             <button
               type="button"
-              aria-expanded={guideOpen}
-              onClick={() => setGuideOpen((o) => !o)}
-              className="self-stretch flex items-center gap-2.5 text-left cursor-pointer"
+              onClick={save}
+              disabled={!canSave}
+              className={cx(canSave ? buttonStyles.primary : buttonStyles.outline, "mt-6 h-12 px-6")}
             >
-              <img
-                className={`w-4 h-4 shrink-0 transition-transform ${guideOpen ? "rotate-90" : ""}`}
-                src="icons/chevron.svg"
-                alt=""
-              />
-              <span className="font-gabarito font-bold text-[14px] text-[#111111]">How to install</span>
-              <span className="font-gabarito text-[13px] text-[#6B6B6B]">
-                4 steps · Paste the snippet before &lt;/body&gt; on your website
-              </span>
-              <span className="flex-1" />
-              <span className="font-gabarito font-bold text-[13px] text-[#111111]">
-                {guideOpen ? "Hide steps" : "Show steps"}
-              </span>
+              {busy === "save" ? "Saving…" : "Save and generate widget code"}
             </button>
-            {guideOpen && (
-              <ol className="flex flex-col gap-1.5 pl-6.5">
-                {INSTALL_STEPS.map((step, i) => (
-                  <li key={step} className="font-gabarito text-[13px] text-[#444444]">
-                    {i + 1}. {step}
-                  </li>
-                ))}
-              </ol>
+
+            {/* Sits under the button in the left column, so the taller preview doesn't leave a gap above it. */}
+            {snippet && (
+              <div className="border-line mt-6 border-t pt-6">
+                <SectionLabel>{"Embed code"}</SectionLabel>
+                <pre className={codeBlockStyles}>
+                  <code>{snippet}</code>
+                </pre>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => copyCode(snippet)} className={buttonStyles.primary}>
+                    {copied ? "Copied" : "Copy code"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy !== null}
+                    onClick={toggle}
+                    className={widget.enabled ? buttonStyles.danger : buttonStyles.outline}
+                  >
+                    {busy === "toggle" ? "…" : widget.enabled ? "Disable" : "Enable"}
+                  </button>
+                </div>
+                {widget.enabled ? (
+                  <>
+                    <p className="text-c1 text-ink-secondary mt-3">
+                      {"Paste the snippet before </body> on your website. The widget appears on allowed domains only."}
+                    </p>
+                    <InstallGuide snippet={snippet} />
+                  </>
+                ) : (
+                  <Notice tone="danger" className="mt-4">
+                    <span className="font-bold">{"Widget: DISABLED. "}</span>
+                    {"It no longer appears on your website. Enable it to see the install steps."}
+                  </Notice>
+                )}
+              </div>
             )}
           </div>
+
+          <WidgetPreview
+            color={isHexColor(color) ? color : "#111111"}
+            domain={domains[0] ?? PREVIEW_DOMAIN}
+            position={widget.position}
+            chatbotName={chatbotName}
+          />
+        </div>
+      </div>
+    </ChannelCard>
+  );
+}
+
+/** A browser window with the chat bubble in the chosen color; clicking the bubble opens the chat window. */
+function WidgetPreview({
+  color,
+  domain,
+  position,
+  chatbotName,
+}: {
+  color: string;
+  domain: string;
+  position: WidgetChannel["position"];
+  chatbotName: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const left = position === "bottom-left";
+  // The owner's own color, so it is set inline, not with a token class.
+  const brand = { backgroundColor: color, color: isLightColor(color) ? "black" : "white" };
+  return (
+    <div>
+      <p className="text-p4 text-ink font-bold">{"Live preview"}</p>
+      <p className="text-c1 text-ink-secondary">{"Click the bubble to view the web widget"}</p>
+      <div className="rounded-small border-line bg-subtle relative mt-3 h-[30rem] overflow-hidden border">
+        <div aria-hidden className="border-line bg-card flex items-center gap-2 border-b px-3 py-2">
+          <span className="flex gap-1">
+            {[0, 1, 2].map((dot) => (
+              <span key={dot} className="bg-muted size-2 rounded-full" />
+            ))}
+          </span>
+          <span className="rounded-pill border-line text-c3 text-ink-secondary flex-1 truncate border px-3 py-1">
+            {domain}
+          </span>
+        </div>
+        <div aria-hidden className="flex flex-col gap-2 p-4">
+          <span className="h-3 w-1/3 rounded-xs bg-[#D6D6D2]" />
+          <span className="h-2 w-5/6 rounded-xs bg-[#D6D6D2]" />
+          <span className="h-2 w-3/4 rounded-xs bg-[#D6D6D2]" />
+          <span className="h-2 w-1/2 rounded-xs bg-[#D6D6D2]" />
+        </div>
+        {open && <PreviewChatWindow name={chatbotName} brand={brand} left={left} onClose={() => setOpen(false)} />}
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-label={open ? "Close the previewed chat window" : "Open the previewed chat window"}
+          onClick={() => setOpen((o) => !o)}
+          className={cx(
+            "rounded-pill shadow-elevated absolute bottom-4 flex size-12 cursor-pointer items-center justify-center",
+            left ? "left-4" : "right-4",
+          )}
+          style={brand}
+        >
+          {open ? <X className="size-5" /> : <MessageCircleMore className="size-5" />}
+        </button>
+      </div>
+      <p className="text-c1 text-ink-secondary mt-2 flex items-center gap-2">
+        <span aria-hidden className="border-line size-2.5 rounded-full border" style={{ backgroundColor: color }} />
+        {`Primary color ${color} · Position: ${left ? "Bottom Left" : "Bottom Right"}`}
+      </p>
+    </div>
+  );
+}
+
+/** The opened widget as visitors see it (web-widget.png), with a sample exchange. */
+function PreviewChatWindow({
+  name,
+  brand,
+  left,
+  onClose,
+}: {
+  name: string;
+  brand: { backgroundColor: string; color: string };
+  left: boolean;
+  onClose: () => void;
+}) {
+  const initial = name.trim().charAt(0).toUpperCase() || "C";
+  return (
+    <div
+      role="dialog"
+      aria-label={`${name} chat window preview`}
+      className={cx(
+        "rounded-small border-line bg-card shadow-elevated absolute bottom-20 flex h-[22rem] w-64 flex-col overflow-hidden border",
+        left ? "left-4" : "right-4",
+      )}
+    >
+      <div className="border-line flex items-center gap-2 border-b px-3 py-2.5">
+        <span className="bg-accent-tint text-accent text-c1 flex size-7 shrink-0 items-center justify-center rounded-lg font-bold">
+          {initial}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-c1 text-ink truncate font-bold">{name}</p>
+          <p className="text-c3 text-ink-secondary truncate">{"Online · answers from your documents"}</p>
+        </div>
+        <button
+          type="button"
+          aria-label="Close"
+          onClick={onClose}
+          className="bg-subtle text-ink flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full"
+        >
+          <X className="size-3.5" />
+        </button>
+      </div>
+
+      <div aria-hidden className="bg-subtle flex flex-1 flex-col gap-2.5 overflow-hidden px-3 py-3">
+        <p className="text-c3 max-w-[85%] self-end rounded-xl px-3 py-2" style={brand}>
+          {"What can you help me with?"}
+        </p>
+        <p className="text-c3 text-ink-secondary flex items-center gap-1.5 font-mono tracking-widest uppercase">
+          <span className="bg-accent-tint text-accent flex size-4 items-center justify-center rounded font-bold">
+            {initial}
+          </span>
+          {"Searched 1 source"}
+        </p>
+        <p className="text-c3 text-ink-body">
+          {"I answer questions using the documents in this chatbot’s knowledge base. "}
+          <span className="border-line rounded border px-1">{"1"}</span>
+        </p>
+        <span className="rounded-pill border-line bg-card text-c3 text-ink flex items-center gap-1.5 self-start border px-2 py-1">
+          <span className="bg-subtle rounded px-1">{"1"}</span>
+          <FileText className="size-3" />
+          <span className="font-bold">{"knowledge-base"}</span>
+          <span className="text-ink-secondary">{"PDF"}</span>
+        </span>
+      </div>
+
+      <div aria-hidden className="border-line border-t px-3 pt-2 pb-1.5">
+        <div className="rounded-pill border-line flex items-center gap-1.5 border py-1 pr-1 pl-3">
+          <span className="text-c3 text-ink-muted flex-1 truncate">{`Ask ${name}…`}</span>
+          <span className="border-line flex size-6 items-center justify-center rounded-full border">
+            <Mic className="size-3" />
+          </span>
+          <span className="flex size-6 items-center justify-center rounded-full" style={brand}>
+            <ArrowUp className="size-3" />
+          </span>
+        </div>
+        <p className="text-c3 text-ink-secondary mt-1.5 flex items-center justify-center gap-1">
+          <Lock className="size-2.5" />
+          {"Answers come only from your documents"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** "How to install" row that opens the four install steps. */
+function InstallGuide({ snippet }: { snippet: string }) {
+  const [open, setOpen] = useState(false);
+  const bodyExample = `<body>\n  …your page content…\n  ${snippet.replace(/\n\s*/g, " ")}\n</body>`;
+  return (
+    <div className="rounded-small border-line bg-subtle mt-4 border">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left"
+      >
+        <ChevronDown
+          aria-hidden
+          className={cx("text-ink size-4 shrink-0 transition-transform", open && "rotate-180")}
+        />
+        <span className="text-c1 text-ink font-bold">{"How to install"}</span>
+        <span className="text-c1 text-ink-secondary flex-1 truncate">
+          {open
+            ? `${INSTALL_STEPS.length} steps · about 2 minutes`
+            : `${INSTALL_STEPS.length} steps · Paste the snippet before </body> on your website`}
+        </span>
+        <span className="text-c1 text-ink font-bold">{open ? "Hide steps" : "Show steps"}</span>
+      </button>
+      {open && (
+        <div className="border-line mx-4 border-t py-4">
+          <ol className="flex flex-col gap-4">
+            {INSTALL_STEPS.map((step, index) => (
+              <li key={step.title} className="flex gap-3">
+                <span className="bg-inverse text-on-inverse text-c3 flex size-5 shrink-0 items-center justify-center rounded-full font-bold">
+                  {index + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-c1 text-ink font-bold">{step.title}</p>
+                  <p className="text-c1 text-ink-body">{step.text}</p>
+                  {index === 2 && (
+                    <pre className={cx(codeBlockStyles, "mt-2 p-4")}>
+                      <code>{bodyExample}</code>
+                    </pre>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+          <Notice className="mt-4">
+            {
+              "Prototype: chatbot data is stored in this browser only. The widget works on websites you open in this same browser (any localhost port works); visitors on other computers will need RAG Studio's real servers."
+            }
+          </Notice>
         </div>
       )}
-    </ChannelCard>
+    </div>
   );
 }
