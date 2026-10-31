@@ -919,16 +919,13 @@ async function answerFor(bot: Chatbot, question: unknown): Promise<ChatAnswer> {
   const lead = best.paragraph
     ? trim(best.paragraph)
     : `“${best.doc.name}” covers this topic — open the source below for the details.`;
-  const extra = !second?.paragraph
-    ? ""
-    : second.doc.id === best.doc.id
-      ? `\n\n${trim(second.paragraph, 300)}`
-      : `\n\nAlso from ${second.doc.name.replace(/\.[a-z0-9]+$/i, "")}: ${trim(second.paragraph, 260)}`;
+  // The answer is just the text; which documents it came from is shown in `sources`, below the answer.
+  const extra = !second?.paragraph ? "" : `\n\n${trim(second.paragraph, second.doc.id === best.doc.id ? 300 : 260)}`;
   return {
     answered: true,
     sourcesSearched: ready.length,
     sources,
-    answer: `According to ${best.doc.name.replace(/\.[a-z0-9]+$/i, "")}: ${lead}${extra}`,
+    answer: `${lead}${extra}`,
   };
 }
 
