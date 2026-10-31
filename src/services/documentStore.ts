@@ -1,5 +1,7 @@
 // The mock server's file storage. Uploaded files and their extracted text are too large for
 // localStorage, so they live in IndexedDB, keyed by upload id and later by document id.
+import { siteStorage } from "./siteStorage";
+
 const DB_NAME = "rag-studio-files";
 const STORE = "files";
 
@@ -7,7 +9,7 @@ export type StoredFile = { blob: Blob | null; text: string };
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
+    const req = siteStorage.indexedDB.open(DB_NAME, 1);
     req.onupgradeneeded = () => req.result.createObjectStore(STORE);
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);

@@ -10,8 +10,13 @@
  */
 (function () {
   var script = document.currentScript;
-  if (!script || window.__ragStudioWidget) return;
-  window.__ragStudioWidget = true;
+  if (!script) return;
+  // Loading the snippet again (e.g. pasting another chatbot's code into the browser console) replaces the widget.
+  if (window.__ragStudioWidget && window.__ragStudioWidget.remove) window.__ragStudioWidget.remove();
+  // A widget from an older copy of this file leaves only its iframe to find.
+  Array.prototype.forEach.call(document.querySelectorAll('iframe[src*="#/w/"]'), function (old) {
+    if (old.src.indexOf(script.src.replace(/[^/]*$/, "")) === 0) old.parentNode.removeChild(old);
+  });
 
   var chatbotId = script.getAttribute("data-chatbot-id");
   if (!chatbotId) {
@@ -51,7 +56,7 @@
 
   var lastReason = null; // the widget re-checks its status every few seconds; warn once per reason
 
-  window.addEventListener("message", function (event) {
+  var onMessage = function (event) {
     if (event.source !== frame.contentWindow || event.origin !== studioOrigin) return;
     var data = event.data;
     if (!data || data.type !== "rag-studio-widget") return;
@@ -69,7 +74,17 @@
     frame.style.height = size.height + "px";
     frame.style.left = data.position === "bottom-left" ? "8px" : "auto";
     frame.style.right = data.position === "bottom-left" ? "auto" : "8px";
-  });
+  };
+  window.addEventListener("message", onMessage);
+
+  window.__ragStudioWidget = {
+    chatbotId: chatbotId,
+    remove: function () {
+      window.removeEventListener("message", onMessage);
+      if (frame.parentNode) frame.parentNode.removeChild(frame);
+      window.__ragStudioWidget = null;
+    },
+  };
 
   var mount = function () {
     document.body.appendChild(frame);

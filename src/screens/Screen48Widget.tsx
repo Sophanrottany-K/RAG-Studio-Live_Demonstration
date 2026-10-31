@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { Lock, MessageCircleMore, X } from "lucide-react";
 import { ChatThread } from "../components/chat/ChatThread";
-import { api, isAbort, watchChanges } from "../services/api";
+import { api, isAbort, usingMockApi, watchChanges } from "../services/api";
+import { connectSiteStorage, isCrossSiteFrame } from "../services/siteStorage";
 import { ApiError, type WidgetChat, type WidgetEmbed } from "../services/types";
 
 const UNAVAILABLE = {
@@ -19,6 +20,9 @@ const HIDDEN: Record<string, (host: string) => string> = {
   domain_not_allowed: (host) =>
     `"${host}" isn't in the widget's Allowed domains. Add it in RAG Studio and click Save and generate widget code.`,
   not_found: () => "no chatbot has this data-chatbot-id. Copy the embed code from RAG Studio again.",
+  no_storage_access: () =>
+    "Chrome didn't let the widget read RAG Studio's data on this site (third-party cookies are blocked). " +
+    "Allow third-party cookies for this site (address bar → eye/site settings), then reload.",
 };
 
 type WidgetState = "open" | "closed" | "hidden";
@@ -45,6 +49,10 @@ export default function Screen48Widget() {
   const [chat, setChat] = useState<WidgetChat | null>(null);
   const [hidden, setHidden] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  // Prototype only: on another site this iframe can't see RAG Studio's storage until Chrome grants access, which
+  // may need a click. Until then a plain bubble in the embed code's color asks for it.
+  const [needsAccess, setNeedsAccess] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   // The iframe must be see-through around the bubble.
   useEffect(() => {
@@ -57,12 +65,24 @@ export default function Screen48Widget() {
   // domain takes effect without reloading the website.
   useEffect(() => {
     let controller: AbortController | null = null;
+    const storage = usingMockApi ? connectSiteStorage() : Promise.resolve(false);
     const load = () => {
       controller?.abort();
-      controller = new AbortController();
-      api
-        .getWidgetChat(chatbotId, host, controller.signal, embed)
+      const current = (controller = new AbortController());
+      storage
+        .then((connected) =>
+          api.getWidgetChat(chatbotId, host, current.signal, embed).catch((e) => {
+            // Not in this iframe's own storage: maybe in RAG Studio's, once Chrome allows it (after a click).
+            if (e instanceof ApiError && e.status === 404 && usingMockApi && isCrossSiteFrame() && !connected) {
+              setNeedsAccess(true);
+              return null;
+            }
+            throw e;
+          }),
+        )
         .then((next) => {
+          if (!next) return;
+          setNeedsAccess(false);
           const reason = next.reason && HIDDEN[next.reason];
           setHidden(reason ? reason(host) : null);
           setChat(next);
@@ -82,12 +102,35 @@ export default function Screen48Widget() {
       window.removeEventListener("focus", load);
       controller?.abort();
     };
-  }, [chatbotId, host, embed]);
+  }, [chatbotId, host, embed, attempt]);
 
   useEffect(() => {
     if (hidden) tellLoader("hidden", { reason: hidden });
     else if (chat) tellLoader(open ? "open" : "closed", { position: chat.position });
-  }, [hidden, chat, open]);
+    else if (needsAccess) tellLoader("closed", { position: embed.position });
+  }, [hidden, chat, open, needsAccess, embed.position]);
+
+  if (needsAccess && !chat && !hidden) {
+    const left = embed.position === "bottom-left";
+    return (
+      <div className={`h-screen w-screen flex flex-col justify-end p-4 ${left ? "items-start" : "items-end"}`}>
+        <button
+          type="button"
+          aria-label="Open chat"
+          onClick={async () => {
+            if (await connectSiteStorage()) {
+              setOpen(true);
+              setAttempt((n) => n + 1);
+            } else setHidden(HIDDEN.no_storage_access(host));
+          }}
+          className="size-14 shrink-0 rounded-full flex items-center justify-center cursor-pointer shadow-[0px_4px_12px_0px_#00000033] transition-transform hover:scale-105"
+          style={{ background: embed.primaryColor ?? "#111111", color: "#FFFFFF" }}
+        >
+          <MessageCircleMore className="size-6" />
+        </button>
+      </div>
+    );
+  }
 
   if (!chat || hidden) return null;
 

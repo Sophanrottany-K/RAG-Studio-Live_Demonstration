@@ -45,6 +45,7 @@ import { HR_DOCUMENTS, loadSeedFile } from "./hrDocuments";
 import { fileStore } from "./documentStore";
 import { extractText } from "./extractText";
 import { computeAnalytics, computeUnanswered, type ChatEvent } from "./mockAnalytics";
+import { siteStorage } from "./siteStorage";
 
 const DB_KEY = "rag-studio-mock-db";
 
@@ -229,7 +230,7 @@ function demoChatbot(): StoredChatbot {
 function loadDb(): Db {
   let db: Db = { chatbots: [], uploads: {}, channels: {}, events: [] };
   try {
-    const raw = localStorage.getItem(DB_KEY);
+    const raw = siteStorage.local.getItem(DB_KEY);
     if (raw) db = { ...db, ...(JSON.parse(raw) as Partial<Db>) };
   } catch {
     // storage unavailable or corrupt: start empty
@@ -258,7 +259,7 @@ export function onMockChange(listener: () => void) {
 
 function saveDb(db: Db) {
   try {
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
+    siteStorage.local.setItem(DB_KEY, JSON.stringify(db));
   } catch {
     // storage unavailable: data lives for this page load only
   }
@@ -881,8 +882,8 @@ function findPublic(token: string) {
 /** A stable id for this browser, so a guest's questions group into sessions. */
 function guestId() {
   try {
-    let guest = localStorage.getItem("rag-studio-guest-id");
-    if (!guest) localStorage.setItem("rag-studio-guest-id", (guest = id("guest")));
+    let guest = siteStorage.local.getItem("rag-studio-guest-id");
+    if (!guest) siteStorage.local.setItem("rag-studio-guest-id", (guest = id("guest")));
     return guest;
   } catch {
     return "guest";

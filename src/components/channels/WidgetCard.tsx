@@ -45,6 +45,28 @@ const INSTALL_STEPS = [
   },
 ];
 
+const CHROME_STEPS = [
+  "Open your website in Chrome. Its address must be in Allowed domains above.",
+  "Press F12 (or Ctrl+Shift+J, Cmd+Option+J on Mac) and open the Console tab.",
+  "The first time, Chrome blocks pasting: type allow pasting and press Enter.",
+  "Paste the code below and press Enter. The chat bubble appears in the bottom corner — click it to chat.",
+];
+
+/**
+ * The embed code as one line of JavaScript for the browser console: it adds the same <script> tag to the page
+ * that's open, so the widget can be tried on a live website without editing its code.
+ */
+export function consoleSnippet(embedCode: string) {
+  const script = new DOMParser().parseFromString(embedCode, "text/html").querySelector("script");
+  if (!script) return null;
+  const attrs: Record<string, string> = {};
+  for (const attr of Array.from(script.attributes)) if (attr.name.startsWith("data-")) attrs[attr.name] = attr.value;
+  return (
+    `(function(d){var s=d.createElement("script");s.src=${JSON.stringify(script.src)};s.async=true;` +
+    `var a=${JSON.stringify(attrs)};for(var k in a)s.setAttribute(k,a[k]);d.body.appendChild(s);})(document);`
+  );
+}
+
 /** Black text on light colors, white on dark ones. */
 function isLightColor(hex: string) {
   const n = parseInt(hex.slice(1), 16);
@@ -254,6 +276,7 @@ export function WidgetCard({
                       {"Paste the snippet before </body> on your website. The widget appears on allowed domains only."}
                     </p>
                     <InstallGuide snippet={snippet} />
+                    <ChromeGuide snippet={snippet} />
                   </>
                 ) : (
                   <Notice tone="danger" className="mt-4">
@@ -414,6 +437,68 @@ function PreviewChatWindow({
           {"Answers come only from your documents"}
         </p>
       </div>
+    </div>
+  );
+}
+
+/** "Try it in Chrome" row: the embed code as a console one-liner, for trying the widget on a live site. */
+function ChromeGuide({ snippet }: { snippet: string }) {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const code = consoleSnippet(snippet);
+  if (!code) return null;
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // the code stays selectable below
+    }
+  };
+  return (
+    <div className="rounded-small border-line bg-subtle mt-3 border">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left"
+      >
+        <ChevronDown
+          aria-hidden
+          className={cx("text-ink size-4 shrink-0 transition-transform", open && "rotate-180")}
+        />
+        <span className="text-c1 text-ink font-bold">{"Try it in Chrome"}</span>
+        <span className="text-c1 text-ink-secondary flex-1 truncate">
+          {"No code editor: paste into the browser console on your live website"}
+        </span>
+        <span className="text-c1 text-ink font-bold">{open ? "Hide" : "Show"}</span>
+      </button>
+      {open && (
+        <div className="border-line mx-4 border-t py-4">
+          <ol className="flex flex-col gap-3">
+            {CHROME_STEPS.map((step, index) => (
+              <li key={step} className="flex gap-3">
+                <span className="bg-inverse text-on-inverse text-c3 flex size-5 shrink-0 items-center justify-center rounded-full font-bold">
+                  {index + 1}
+                </span>
+                <p className="text-c1 text-ink-body min-w-0 flex-1">{step}</p>
+              </li>
+            ))}
+          </ol>
+          <pre className={cx(codeBlockStyles, "mt-3 p-4 break-all whitespace-pre-wrap")}>
+            <code>{code}</code>
+          </pre>
+          <button type="button" onClick={copy} className={cx(buttonStyles.primary, "mt-3")}>
+            {copied ? "Copied" : "Copy for Chrome console"}
+          </button>
+          <Notice className="mt-4">
+            {
+              "The widget stays until you reload the page; paste again to bring it back. Pasting another chatbot's code replaces the current widget. Keep RAG Studio running (npm run dev) in this same Chrome."
+            }
+          </Notice>
+        </div>
+      )}
     </div>
   );
 }
