@@ -5,7 +5,8 @@ import { siteStorage } from "./siteStorage";
 const DB_NAME = "rag-studio-files";
 const STORE = "files";
 
-export type StoredFile = { blob: Blob | null; text: string };
+/** `version`: the extractText version that produced `text` (missing on files stored before versions existed). */
+export type StoredFile = { blob: Blob | null; text: string; version?: number };
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {

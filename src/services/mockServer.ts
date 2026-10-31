@@ -43,7 +43,7 @@ import {
 import { DEMO_DOCUMENTS } from "./demoDocuments";
 import { HR_DOCUMENTS, loadSeedFile } from "./hrDocuments";
 import { fileStore } from "./documentStore";
-import { extractText } from "./extractText";
+import { TEXT_VERSION, extractText } from "./extractText";
 import { computeAnalytics, computeUnanswered, type ChatEvent } from "./mockAnalytics";
 import { siteStorage } from "./siteStorage";
 
@@ -175,17 +175,29 @@ function hrChatbot(): StoredChatbot {
 }
 
 /**
- * The HR seed documents are loaded and read once, then kept in the file store like an upload.
+ * A document's stored file and text. The HR seed documents are loaded and read once, then kept in the file store
+ * like an upload; any file whose text came from an older extractText is read again (`type` is its file type).
  * Returns what is stored, or null if the file can't be loaded.
  */
-async function ensureSeedFile(docId: string) {
+async function ensureSeedFile(docId: string, type?: string) {
   const seed = HR_DOCUMENTS.find((d) => d.id === docId);
   const stored = await fileStore.get(docId);
+  // Text read by an older extractor: read it again from the stored file.
+  const fileType = seed?.type ?? type;
+  if (stored?.blob && fileType && stored.version !== TEXT_VERSION) {
+    try {
+      const entry = { blob: stored.blob, text: await extractText(stored.blob, fileType), version: TEXT_VERSION };
+      await fileStore.put(docId, entry);
+      return entry;
+    } catch {
+      return stored;
+    }
+  }
   if (stored || !seed) return stored;
   try {
     const blob = await loadSeedFile(seed);
     if (!blob.size) return null;
-    const entry = { blob, text: await extractText(blob, seed.type) };
+    const entry = { blob, text: await extractText(blob, seed.type), version: TEXT_VERSION };
     await fileStore.put(docId, entry);
     return entry;
   } catch {
@@ -708,7 +720,7 @@ async function documentOriginal(bot: Chatbot, docId: string): Promise<DocumentOr
   if (!document) throw new ApiError("Document not found.", 404, "not_found");
   const demo = DEMO_DOCUMENTS.find((d) => d.id === docId);
   if (demo) return { document, file: null, text: demo.text, demo: demo.preview, uploadedAt: demo.uploadedAt };
-  const stored = await ensureSeedFile(docId);
+  const stored = await ensureSeedFile(docId, document.type);
   const seededAt = HR_DOCUMENTS.find((d) => d.id === docId)?.uploadedAt;
   const startsAt = loadDb()
     .chatbots.find((b) => b.id === bot.id)
@@ -734,17 +746,44 @@ const STOPWORDS = new Set(
   ).split(" "),
 );
 
-const terms = (text: string) =>
-  new Set(
-    (text.toLowerCase().match(/[a-z0-9]+/g) ?? [])
-      .filter((w) => w.length > 2 && !STOPWORDS.has(w))
-      .map((w) => (w.length > 5 ? w.replace(/(ies)$/, "y").replace(/(ing|ed|es|s)$/, "") : w.replace(/s$/, ""))),
+/** The meaningful words of a text, stemmed, in order and with repeats. */
+const termList = (text: string) =>
+  (text.toLowerCase().match(/[a-z0-9]+/g) ?? [])
+    .filter((w) => w.length > 2 && !STOPWORDS.has(w))
+    // A rough stem, so different forms of a word meet: drop a plural "s", read a final "y" as "i", and compare
+    // longer words by their first 5 letters (apply/applied/applicant, eligible/eligibility, policy/policies).
+    .map((w) => {
+      const stem = (w.length <= 5 ? w.replace(/s$/, "") : w).replace(/y$/, "i");
+      return stem.length >= 6 ? stem.slice(0, 5) : stem;
+    });
+
+const terms = (text: string) => new Set(termList(text));
+
+/** Rows exported from a spreadsheet (mostly commas) read worse than sentences, so they rank lower. */
+const isTabular = (text: string) => (text.match(/,/g)?.length ?? 0) / Math.max(1, text.split(/\s+/).length) > 0.2;
+
+/** "What is X?" / "Who is X?" / "Tell me about X": the asker wants a definition of X. */
+const asksDefinition = (question: string) => /^\s*(what|who)\s+(is|are|was)\b|^\s*tell me about\b/i.test(question);
+
+/** Whether the passage defines one of `words`: "X is …", "X stands for …", "X (…)". */
+const definesAny = (paragraph: string, words: string[]) =>
+  words.some((w) =>
+    new RegExp(`\\b${w}\\b[^.]{0,30}?\\s(is|are|was|stands for|means|refers to)\\s|\\b${w}\\s\\(`, "i").test(paragraph),
   );
+
+/** A passage that is mostly questions (e.g. "Questions to ask the school") answers nothing. */
+const isMostlyQuestions = (text: string) => {
+  const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  return sentences.filter((s) => s.endsWith("?")).length * 2 >= sentences.length;
+};
+
+const MIN_PASSAGE = 60;
 
 /**
  * Splits a document into passages: a blank line or a heading-like line (short, no closing
- * punctuation) starts a new one, and the heading stays with the text under it. Title lines and
- * other fragments too short to answer anything are dropped.
+ * punctuation) starts a new one, and the heading stays with the text under it. Fragments too short
+ * to answer anything on their own (table cells from a .docx, e.g. "Eligibility stated" then
+ * "IT students in Year 2…") are joined with the ones after them instead of being dropped.
  */
 function chunk(text: string) {
   const passages: string[] = [];
@@ -756,17 +795,33 @@ function chunk(text: string) {
   for (const raw of text.split("\n")) {
     const line = raw.trim();
     if (!line) flush();
-    else if (line.length < 60 && !/[.!?:;,]$/.test(line)) {
+    else if (line.length < MIN_PASSAGE && !/[.!?:;,]$/.test(line)) {
       flush();
       current.push(`${line}.`);
     } else current.push(line);
   }
   flush();
-  return passages.filter((p) => p.length >= 60);
+  const joined: string[] = [];
+  let pending = "";
+  for (const passage of passages) {
+    pending = pending ? `${pending} ${passage}` : passage;
+    if (pending.length >= MIN_PASSAGE) {
+      joined.push(pending);
+      pending = "";
+    }
+  }
+  if (pending && joined.length) joined[joined.length - 1] += ` ${pending}`;
+  else if (pending.length >= MIN_PASSAGE / 2) joined.push(pending);
+  return joined.filter((p) => !isMostlyQuestions(p));
 }
 
 const trim = (text: string, max = 420) => {
-  const clean = text.replace(/\s+/g, " ").trim();
+  // Spreadsheet rows arrive as CSV: drop empty cells and quotes so they read as text.
+  const clean = text
+    .replace(/(\s*,){2,}/g, " ")
+    .replace(/"/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
   return clean.length <= max ? clean : `${clean.slice(0, max).replace(/\s+\S*$/, "")}…`;
 };
 
@@ -785,23 +840,52 @@ async function answerFor(bot: Chatbot, question: unknown): Promise<ChatAnswer> {
     };
 
   const asked = [...terms(question)];
+  // The asked words as typed (not stemmed), for spotting a passage that defines them.
+  const askedWords = (question.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(
+    (w) => w.length > 2 && !STOPWORDS.has(w),
+  );
+  const wantsDefinition = asksDefinition(question);
   type Hit = { doc: (typeof ready)[number]; paragraph: string; coverage: number; score: number };
-  const hits: Hit[] = [];
+  type Passage = { text: string; words: string[]; heading: Set<string> };
+  const library: { doc: (typeof ready)[number]; passages: Passage[] }[] = [];
   for (const doc of ready) {
-    const text = DEMO_DOCUMENTS.find((d) => d.id === doc.id)?.text ?? (await ensureSeedFile(doc.id))?.text ?? "";
+    const text =
+      DEMO_DOCUMENTS.find((d) => d.id === doc.id)?.text ?? (await ensureSeedFile(doc.id, doc.type))?.text ?? "";
+    library.push({
+      doc,
+      passages: chunk(text).map((p) => ({ text: p, words: termList(p), heading: terms(p.slice(0, 40)) })),
+    });
+  }
+  // Rare words tell more than common ones: in a scholarship guide "scholarship" is everywhere, "eligible" is not.
+  const all = library.flatMap((l) => l.passages);
+  const weight = new Map(
+    asked.map((t) => [t, Math.log(1 + all.length / (1 + all.filter((p) => p.words.includes(t)).length))]),
+  );
+  const w = (t: string) => weight.get(t) ?? 1;
+
+  const hits: Hit[] = [];
+  for (const { doc, passages } of library) {
     const nameTerms = terms(doc.name.replace(/\.[a-z0-9]+$/i, ""));
-    const paragraphs = chunk(text);
     // A document without readable text (a scanned PDF, a web page) can still match on its name.
-    for (const paragraph of paragraphs.length ? paragraphs : [""]) {
-      const paraTerms = terms(paragraph);
+    for (const passage of passages.length ? passages : [{ text: "", words: [], heading: new Set<string>() }]) {
+      const paraTerms = new Set(passage.words);
       const inPara = asked.filter((t) => paraTerms.has(t));
       const inName = asked.filter((t) => nameTerms.has(t));
       const matched = new Set([...inPara, ...inName]);
-      if (!asked.length || (!inPara.length && paragraphs.length)) continue;
-      hits.push({ doc, paragraph, coverage: matched.size / asked.length, score: inPara.length + inName.length * 0.5 });
+      if (!asked.length || (!inPara.length && passages.length)) continue;
+      // Each asked word counts by its rarity, a little more when repeated, and double when it is in the
+      // passage's heading ("3. Eligibility …" for "Who is eligible?").
+      let score = inPara.reduce((sum, t) => {
+        const repeats = Math.min(2, passage.words.filter((x) => x === t).length - 1);
+        return sum + w(t) * (1 + 0.3 * repeats) + (passage.heading.has(t) ? 2 * w(t) : 0);
+      }, 0);
+      score += inName.length * 0.25;
+      if (wantsDefinition && definesAny(passage.text, askedWords)) score += 3;
+      if (isTabular(passage.text)) score *= 0.5;
+      hits.push({ doc, paragraph: passage.text, coverage: matched.size / asked.length, score });
     }
   }
-  const confident = hits.filter((h) => h.coverage >= 0.5).sort((a, b) => b.coverage - a.coverage || b.score - a.score);
+  const confident = hits.filter((h) => h.coverage >= 0.5).sort((a, b) => b.score - a.score);
 
   if (!confident.length) {
     const names = ready.map((d) => d.name.replace(/\.[a-z0-9]+$/i, ""));
@@ -1084,7 +1168,7 @@ export function mockUpload(
             return reject(
               new ApiError("We couldn't read this file. It may be damaged or password-protected.", 422, "unreadable"),
             );
-          await fileStore.put(upload.uploadId, { blob: file, text });
+          await fileStore.put(upload.uploadId, { blob: file, text, version: TEXT_VERSION });
           const db = loadDb();
           db.uploads[upload.uploadId] = upload;
           saveDb(db);
