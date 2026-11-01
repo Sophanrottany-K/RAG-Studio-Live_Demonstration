@@ -25,7 +25,7 @@ import type { ModelCatalog, SearchMode, SourceVisibility } from "../services/typ
 const TONES = ["Professional", "Friendly", "Casual", "Formal"] as const;
 const LENGTHS = ["Concise", "Detailed"] as const;
 const FORMATS = ["Rich text", "Plain text only"] as const;
-const LANGUAGES = ["Auto-detect", "English", "Khmer", "Korean", "Thai", "Vietnamese", "Chinese", "Japanese"];
+const LANGUAGES = ["Auto-detect", "English", "Khmer", "Korean"];
 const VISIBILITY = ["Full document", "Name only", "Hidden"] as const;
 const SEARCH_MODES = ["Hybrid", "Semantic", "Keyword"] as const;
 
@@ -248,7 +248,7 @@ export default function Screen07S2() {
         <Field
           label="Answer language"
           htmlFor="language"
-          hint="Auto-detect replies in the language the guest writes in."
+          hint="Supports English, Khmer and Korean. Auto-detect replies in whichever of these the guest writes in."
         >
           <Select
             id="language"
