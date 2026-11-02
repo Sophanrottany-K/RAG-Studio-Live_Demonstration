@@ -17,6 +17,7 @@ export function Select({
   buttonClassName,
   children,
   disabled,
+  placeholder = "",
 }: {
   /** Read by screen readers. Not shown on screen. */
   label: string;
@@ -30,6 +31,8 @@ export function Select({
   buttonClassName?: string;
   children?: React.ReactNode;
   disabled?: boolean;
+  /** Shown when no option is chosen, e.g. while the options are loading. */
+  placeholder?: string;
 }) {
   const id = useId();
   const labelId = `${id}-label`;
@@ -133,8 +136,8 @@ export function Select({
         }}
         className={
           buttonClassName ??
-          `bg-card text-p1 rounded-small shadow-subtle flex h-12 w-full cursor-pointer items-center gap-2 border px-4 text-left transition-colors ${
-            open ? "border-accent" : "border-line hover:border-accent"
+          `bg-card text-p1 rounded-small shadow-subtle flex h-12 w-full cursor-pointer items-center gap-2 border px-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+            open ? "border-accent" : "border-line enabled:hover:border-accent"
           }`
         }
       >
@@ -142,7 +145,7 @@ export function Select({
           <>
             <span className="min-w-0 flex-1 truncate">
               {valuePrefix && <span className="text-ink-secondary">{`${valuePrefix} `}</span>}
-              <span className="text-ink">{selected?.label ?? ""}</span>
+              <span className={selected ? "text-ink" : "text-ink-muted"}>{selected?.label ?? placeholder}</span>
             </span>
             <ChevronDown aria-hidden className="text-ink shrink-0" />
           </>
