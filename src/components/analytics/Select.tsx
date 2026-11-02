@@ -14,6 +14,8 @@ export function Select({
   onChange,
   valuePrefix,
   className = "",
+  buttonClassName,
+  children,
 }: {
   /** Read by screen readers. Not shown on screen. */
   label: string;
@@ -23,6 +25,9 @@ export function Select({
   /** Muted text before the chosen value, e.g. "Chatbot:". */
   valuePrefix?: string;
   className?: string;
+  /** With `children`, replaces the button's own look and content, for screens with their own Figma markup. */
+  buttonClassName?: string;
+  children?: React.ReactNode;
 }) {
   const id = useId();
   const labelId = `${id}-label`;
@@ -123,15 +128,22 @@ export function Select({
             openList();
           }
         }}
-        className={`bg-card text-p1 rounded-small shadow-subtle flex h-12 w-full cursor-pointer items-center gap-2 border px-4 text-left transition-colors ${
-          open ? "border-accent" : "border-line hover:border-accent"
-        }`}
+        className={
+          buttonClassName ??
+          `bg-card text-p1 rounded-small shadow-subtle flex h-12 w-full cursor-pointer items-center gap-2 border px-4 text-left transition-colors ${
+            open ? "border-accent" : "border-line hover:border-accent"
+          }`
+        }
       >
-        <span className="min-w-0 flex-1 truncate">
-          {valuePrefix && <span className="text-ink-secondary">{`${valuePrefix} `}</span>}
-          <span className="text-ink">{selected?.label ?? ""}</span>
-        </span>
-        <ChevronDown aria-hidden className="text-ink shrink-0" />
+        {children ?? (
+          <>
+            <span className="min-w-0 flex-1 truncate">
+              {valuePrefix && <span className="text-ink-secondary">{`${valuePrefix} `}</span>}
+              <span className="text-ink">{selected?.label ?? ""}</span>
+            </span>
+            <ChevronDown aria-hidden className="text-ink shrink-0" />
+          </>
+        )}
       </button>
       {open && (
         <ul

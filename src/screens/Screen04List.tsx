@@ -2,13 +2,37 @@
 // Route: #/list
 import { useState } from "react";
 import { useGo } from "../lib/nav";
-import { CreatedChatbotRows } from "../components/shared/CreatedChatbotRows";
+import { Select } from "../components/analytics/Select";
+import {
+  CreatedChatbotRows,
+  type ChatbotStats,
+  type NameSort,
+  type StatusFilter,
+} from "../components/shared/CreatedChatbotRows";
 import { Header8 } from "../components/shared/Header8";
 import { AppSidebar } from "../components/shared/AppSidebar";
 
+const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "pending", label: "Pending" },
+  { value: "paused", label: "Paused" },
+  { value: "draft", label: "Draft" },
+  { value: "disabled", label: "Disabled" },
+];
+const SORT_OPTIONS: { value: NameSort; label: string }[] = [
+  { value: "az", label: "Name (A–Z)" },
+  { value: "za", label: "Name (Z–A)" },
+];
+const labelOf = (options: { value: string; label: string }[], value: string) =>
+  options.find((o) => o.value === value)?.label;
+
 export default function Screen04List() {
   const go = useGo();
-  const [count, setCount] = useState(0);
+  const [stats, setStats] = useState<ChatbotStats>({ total: 8, active: 3, notLive: 4, disabled: 1, shown: 8 });
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<StatusFilter>("all");
+  const [sort, setSort] = useState<NameSort>("az");
   return (
     <div className="relative w-full h-full bg-[#FFFFFF] overflow-hidden flex items-start">
       <div className="flex-1 min-w-0 self-stretch bg-bg-card overflow-hidden flex items-start">
@@ -30,7 +54,7 @@ export default function Screen04List() {
                   <div className="self-stretch shrink-0 flex flex-col items-start gap-1">
                     <div className="shrink-0 flex items-center gap-1.5">
                       <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[36px] leading-[40px] tracking-[-1px] text-[#171A2B]">
-                        {"8"}
+                        {stats.total}
                       </div>
                     </div>
                     <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[13px] leading-[16px] text-[#5B6072]">
@@ -50,11 +74,11 @@ export default function Screen04List() {
                   <div className="self-stretch shrink-0 flex flex-col items-start gap-1">
                     <div className="shrink-0 flex items-center gap-1.5">
                       <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[36px] leading-[40px] tracking-[-1px] text-[#171A2B]">
-                        {"3"}
+                        {stats.active}
                       </div>
                     </div>
                     <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[13px] leading-[16px] text-[#5B6072]">
-                      {"38% of chatbots"}
+                      {`${Math.round((stats.active / stats.total) * 100)}% of chatbots`}
                     </div>
                   </div>
                 </div>
@@ -70,7 +94,7 @@ export default function Screen04List() {
                   <div className="self-stretch shrink-0 flex flex-col items-start gap-1">
                     <div className="shrink-0 flex items-center gap-1.5">
                       <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[36px] leading-[40px] tracking-[-1px] text-[#171A2B]">
-                        {"4"}
+                        {stats.notLive}
                       </div>
                     </div>
                     <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[13px] leading-[16px] text-[#5B6072]">
@@ -90,7 +114,7 @@ export default function Screen04List() {
                   <div className="self-stretch shrink-0 flex flex-col items-start gap-1">
                     <div className="shrink-0 flex items-center gap-1.5">
                       <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[36px] leading-[40px] tracking-[-1px] text-[#171A2B]">
-                        {"1"}
+                        {stats.disabled}
                       </div>
                     </div>
                     <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[13px] leading-[16px] text-[#5B6072]">
@@ -100,7 +124,7 @@ export default function Screen04List() {
                 </div>
               </div>
               <div className="self-stretch shrink-0 bg-bg-card border border-[#E4E4E0] rounded-[16px] flex flex-col items-start p-7">
-                <div className="self-stretch shrink-0 overflow-hidden flex flex-col items-start gap-4 pb-5">
+                <div className="self-stretch shrink-0 flex flex-col items-start gap-4 pb-5">
                   <div className="shrink-0 flex flex-col items-start gap-1">
                     <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[18px] leading-[28px] text-text-primary">
                       {"All chatbots"}
@@ -111,7 +135,14 @@ export default function Screen04List() {
                   </div>
                   <div className="self-stretch shrink-0 flex items-center gap-3 relative">
                     <div className="absolute left-138.5 top-0 w-62.5 h-12 flex flex-col items-start">
-                      <div className="w-62.5 h-12 shrink-0 bg-bg-card border border-border-default rounded-[12px] flex items-center gap-2 pr-3 pl-3.5">
+                      <Select
+                        label="Sort"
+                        options={SORT_OPTIONS}
+                        value={sort}
+                        onChange={(v) => setSort(v as NameSort)}
+                        className="w-62.5"
+                        buttonClassName="w-62.5 h-12 shrink-0 bg-bg-card border border-border-default aria-expanded:border-accent hover:border-accent rounded-[12px] flex items-center gap-2 pr-3 pl-3.5 text-left cursor-pointer transition-colors"
+                      >
                         <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[20px] text-ink-secondary">
                           {"Sort:"}
                         </div>
@@ -121,29 +152,41 @@ export default function Screen04List() {
                           alt=""
                         />
                         <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">
-                          {"Name (A–Z)"}
+                          {labelOf(SORT_OPTIONS, sort)}
                         </div>
                         <img className="w-3.5 h-3.5 shrink-0" src="icons/icon-caret-down.svg" alt="" />
-                      </div>
+                      </Select>
                     </div>
                     <div className="absolute left-83 top-0 w-52.5 h-12 flex flex-col items-start">
-                      <div className="w-52.5 h-12 shrink-0 bg-bg-card border border-border-default rounded-[12px] flex items-center gap-2 pr-3 pl-3.5">
+                      <Select
+                        label="Status"
+                        options={STATUS_OPTIONS}
+                        value={status}
+                        onChange={(v) => setStatus(v as StatusFilter)}
+                        className="w-52.5"
+                        buttonClassName="w-52.5 h-12 shrink-0 bg-bg-card border border-border-default aria-expanded:border-accent hover:border-accent rounded-[12px] flex items-center gap-2 pr-3 pl-3.5 text-left cursor-pointer transition-colors"
+                      >
                         <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[20px] text-ink-secondary">
                           {"Status:"}
                         </div>
                         <div className="w-2 h-2 shrink-0 border-[1.5px] border-ink-secondary rounded-full" />
                         <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">
-                          {"All"}
+                          {labelOf(STATUS_OPTIONS, status)}
                         </div>
                         <img className="w-3.5 h-3.5 shrink-0" src="icons/icon-caret-down.svg" alt="" />
-                      </div>
+                      </Select>
                     </div>
-                    <div className="w-80 h-12 shrink-0 bg-bg-card border border-border-default rounded-[12px] flex items-center gap-2.5 px-3.5">
+                    <label className="w-80 h-12 shrink-0 bg-bg-card border border-border-default focus-within:border-accent rounded-[12px] flex items-center gap-2.5 px-3.5 cursor-text transition-colors">
                       <img className="w-4 h-4 shrink-0" src="icons/icon-search.svg" alt="" />
-                      <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[20px] text-ink-muted">
-                        {"Search by bot name"}
-                      </div>
-                    </div>
+                      <input
+                        type="text"
+                        aria-label="Search by bot name"
+                        placeholder="Search by bot name"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="flex-1 min-w-0 bg-transparent outline-none font-gabarito text-[14px] leading-[20px] text-ink-primary placeholder:text-ink-muted"
+                      />
+                    </label>
                     <div className="w-52.5 h-12 shrink-0 overflow-hidden" />
                     <div className="w-62.5 h-12 shrink-0 overflow-hidden" />
                     <div className="flex-1 min-w-0 h-px flex items-start" />
@@ -196,10 +239,12 @@ export default function Screen04List() {
                     </div>
                   </div>
                 </div>
-                <CreatedChatbotRows onCount={setCount} />
+                <CreatedChatbotRows search={search} status={status} sort={sort} onStats={setStats} />
                 <div className="self-stretch shrink-0 flex justify-between items-center pt-5 pr-4 pl-4">
                   <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[20px] text-[#6B6B6B]">
-                    {count === 0 ? "No chatbots yet" : `Showing 1–${count} of ${count} chatbot${count === 1 ? "" : "s"}`}
+                    {stats.shown === 0
+                      ? "No chatbots found"
+                      : `Showing 1–${stats.shown} of ${stats.shown} chatbot${stats.shown === 1 ? "" : "s"}`}
                   </div>
                   <div className="shrink-0 bg-[#F4F4F2] rounded-full flex items-center gap-1.5 px-5 py-1.5">
                     <div className="shrink-0 opacity-40 overflow-hidden flex items-center gap-1.5 pr-4.5">
