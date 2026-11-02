@@ -28,7 +28,7 @@ export function CreateLayout({
             <div className="flex-1 min-w-0 bg-bg-card border border-border-default rounded-[20px] flex flex-col items-start gap-6 p-8">
               {children}
             </div>
-            <aside className="w-95 shrink-0 sticky top-0 flex flex-col items-start gap-5">{aside}</aside>
+            {aside && <aside className="w-95 shrink-0 sticky top-0 flex flex-col items-start gap-5">{aside}</aside>}
           </div>
         </div>
       </div>

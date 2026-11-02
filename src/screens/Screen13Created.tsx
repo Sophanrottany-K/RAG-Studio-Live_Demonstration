@@ -5,8 +5,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { CreateLayout } from "../components/create/CreateLayout";
 import { Banner, Button, SectionLabel, Spinner, StatusPill } from "../components/create/ui";
 import { initials } from "../lib/chatbotDraft";
-import { formatBytes } from "../services/limits";
-import { DOC_PILL } from "../components/chatbot/status";
 import { useChatbot } from "../lib/useChatbot";
 import type { Chatbot } from "../services/types";
 
@@ -75,7 +73,7 @@ export default function Screen13Created() {
           {summary}
         </div>
 
-        <div className="self-stretch max-w-180 flex flex-col items-start gap-2.5">
+        <div className="self-stretch flex flex-col items-start gap-2.5">
           <SectionLabel>Next steps</SectionLabel>
           <div className="self-stretch bg-bg-card border border-[#ECECEA] rounded-[16px] overflow-hidden flex flex-col">
             <NextStep
@@ -138,35 +136,6 @@ export default function Screen13Created() {
           </div>
         </div>
 
-        {docs.length > 0 && (
-          <div className="self-stretch max-w-180 flex flex-col items-start gap-2.5">
-            <SectionLabel>{`Documents (${docs.length})`}</SectionLabel>
-            <div className="self-stretch bg-bg-card border border-[#ECECEA] rounded-[16px] overflow-hidden flex flex-col">
-              {docs.map((d) => (
-                <div
-                  key={d.id}
-                  className="self-stretch border-b border-[#F0F0EE] last:border-b-0 flex items-center gap-3 px-4 py-3"
-                >
-                  <div className="w-11 h-6 shrink-0 bg-[#F3F3F1] rounded-[6px] flex justify-center items-center font-geist-mono text-[10px] text-[#525252]">
-                    {d.kind === "url" ? "URL" : d.type}
-                  </div>
-                  <div className="flex-1 min-w-0 truncate font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">
-                    {d.name}
-                  </div>
-                  <div className="w-18 shrink-0 font-gabarito text-[12px] text-ink-secondary">
-                    {formatBytes(d.sizeBytes)}
-                  </div>
-                  <div className="w-24 shrink-0 flex justify-end">
-                    <StatusPill tone={DOC_PILL[d.status].tone} pulse={d.status === "processing"}>
-                      {DOC_PILL[d.status].label}
-                    </StatusPill>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {error && <Banner tone="warning">{`Lost connection while checking progress (${error}). Retrying…`}</Banner>}
 
         <div className="flex flex-wrap justify-center items-start gap-2.5 pt-2">
@@ -188,7 +157,7 @@ function Action({ onClick, children }: { onClick: () => void; children: string }
     <button
       type="button"
       onClick={onClick}
-      className="shrink-0 font-gabarito font-medium text-[12px] text-ink-primary hover:underline cursor-pointer"
+      className="shrink-0 font-gabarito font-medium text-[14px] text-ink-primary hover:underline cursor-pointer"
     >
       {children}
     </button>
@@ -209,11 +178,11 @@ function NextStep({
   last?: boolean;
 }) {
   return (
-    <div className={`self-stretch flex items-center gap-3.5 px-4 py-3.5 ${last ? "" : "border-b border-[#F0F0EE]"}`}>
-      <img className="w-9 h-9 shrink-0" src={`icons/number-${n}.svg`} alt="" />
+    <div className={`self-stretch flex items-center gap-4 px-5 py-4 ${last ? "" : "border-b border-[#F0F0EE]"}`}>
+      <img className="w-10 h-10 shrink-0" src={`icons/number-${n}.svg`} alt="" />
       <div className="flex-1 min-w-0 flex flex-col items-start gap-0.5">
-        <div className="font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">{title}</div>
-        <div className="font-gabarito text-[12px] leading-[16px] text-ink-muted">{detail}</div>
+        <div className="font-gabarito font-medium text-[16px] leading-[24px] text-ink-primary">{title}</div>
+        <div className="font-gabarito text-[14px] leading-[20px] text-ink-muted">{detail}</div>
       </div>
       {status}
     </div>
