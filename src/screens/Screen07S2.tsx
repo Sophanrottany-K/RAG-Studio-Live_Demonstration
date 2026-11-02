@@ -2,19 +2,10 @@
 // Routes: #/s2, #/s2q
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { Select, type SelectOption } from "../components/analytics/Select";
 import { CreateLayout, StepFooter, StepHeading } from "../components/create/CreateLayout";
 import { DraftPreview, PublishChecklist } from "../components/create/DraftPreview";
-import {
-  Banner,
-  Button,
-  ChipGroup,
-  Field,
-  SectionLabel,
-  Select,
-  TextArea,
-  TextInput,
-  Toggle,
-} from "../components/create/ui";
+import { Banner, Button, ChipGroup, Field, SectionLabel, TextArea, TextInput, Toggle } from "../components/create/ui";
 import { useCancelCreate } from "../components/create/useCancelCreate";
 import { DragHandle } from "../components/shared/DragHandle";
 import { DEFAULT_INSTRUCTIONS, useChatbotDraft } from "../lib/chatbotDraft";
@@ -128,51 +119,41 @@ export default function Screen07S2() {
           <div className="flex-1 min-w-0">
             <Field
               label="Chat model *"
-              htmlFor="chat-model"
               hint={
                 chatModel
                   ? `${chatModel.provider} · ${chatModel.description}`
                   : "From the chat models your admin has enabled."
               }
             >
-              <Select
-                id="chat-model"
+              <FieldSelect
+                label="Chat model"
                 disabled={!catalog}
+                placeholder={catalogError ? "Unavailable" : "Loading models…"}
+                options={(catalog?.chat ?? []).map((m) => ({
+                  value: m.id,
+                  label: `${m.label}${m.isDefault ? " (default)" : ""}`,
+                }))}
                 value={settings.chatModel}
-                onChange={(e) => updateSettings({ chatModel: e.target.value })}
-              >
-                {!catalog && <option>{catalogError ? "Unavailable" : "Loading models…"}</option>}
-                {catalog?.chat.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label}
-                    {m.isDefault ? " (default)" : ""}
-                  </option>
-                ))}
-              </Select>
+                onChange={(chatModel) => updateSettings({ chatModel })}
+              />
             </Field>
           </div>
           <div className="flex-1 min-w-0">
             <Field
               label="Embedding model"
-              htmlFor="embedding-model"
               hint={
                 catalog?.embedding.find((m) => m.id === settings.embeddingModel)?.description ??
                 "Turns documents into searchable vectors."
               }
             >
-              <Select
-                id="embedding-model"
+              <FieldSelect
+                label="Embedding model"
                 disabled={!catalog}
+                placeholder={catalogError ? "Unavailable" : "Loading models…"}
+                options={(catalog?.embedding ?? []).map((m) => ({ value: m.id, label: m.label }))}
                 value={settings.embeddingModel}
-                onChange={(e) => updateSettings({ embeddingModel: e.target.value })}
-              >
-                {!catalog && <option>{catalogError ? "Unavailable" : "Loading models…"}</option>}
-                {catalog?.embedding.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label}
-                  </option>
-                ))}
-              </Select>
+                onChange={(embeddingModel) => updateSettings({ embeddingModel })}
+              />
             </Field>
           </div>
         </div>
@@ -247,18 +228,14 @@ export default function Screen07S2() {
         </div>
         <Field
           label="Answer language"
-          htmlFor="language"
           hint="Supports English, Khmer and Korean. Auto-detect replies in whichever of these the guest writes in."
         >
-          <Select
-            id="language"
+          <FieldSelect
+            label="Answer language"
+            options={LANGUAGES.map((l) => ({ value: l, label: l }))}
             value={settings.language}
-            onChange={(e) => updateSettings({ language: e.target.value })}
-          >
-            {LANGUAGES.map((l) => (
-              <option key={l}>{l}</option>
-            ))}
-          </Select>
+            onChange={(language) => updateSettings({ language })}
+          />
         </Field>
         <StarterQuestions />
         <Field label="Source visibility" hint={VISIBILITY_HINT[settings.sourceVisibility]}>
@@ -391,6 +368,33 @@ export default function Screen07S2() {
         </Button>
       </StepFooter>
     </CreateLayout>
+  );
+}
+
+/** A full-width dropdown styled like the status filter on the chatbot list. */
+function FieldSelect({
+  placeholder,
+  ...props
+}: {
+  label: string;
+  options: SelectOption[];
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  /** Shown while there's no option to show, e.g. when models are loading. */
+  placeholder?: string;
+}) {
+  return (
+    <Select
+      {...props}
+      className="self-stretch"
+      buttonClassName="w-full h-12 shrink-0 bg-bg-card border border-border-default enabled:hover:border-accent aria-expanded:border-accent rounded-[12px] flex items-center gap-2 pr-3 pl-3.5 text-left cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+    >
+      <div className="flex-1 min-w-0 truncate font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">
+        {props.options.find((o) => o.value === props.value)?.label ?? placeholder}
+      </div>
+      <img className="w-3.5 h-3.5 shrink-0" src="icons/icon-caret-down.svg" alt="" />
+    </Select>
   );
 }
 

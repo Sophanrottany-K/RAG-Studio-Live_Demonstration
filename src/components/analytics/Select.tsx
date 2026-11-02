@@ -16,6 +16,7 @@ export function Select({
   className = "",
   buttonClassName,
   children,
+  disabled,
 }: {
   /** Read by screen readers. Not shown on screen. */
   label: string;
@@ -28,6 +29,7 @@ export function Select({
   /** With `children`, replaces the button's own look and content, for screens with their own Figma markup. */
   buttonClassName?: string;
   children?: React.ReactNode;
+  disabled?: boolean;
 }) {
   const id = useId();
   const labelId = `${id}-label`;
@@ -118,6 +120,7 @@ export function Select({
         ref={buttonRef}
         id={buttonId}
         type="button"
+        disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-labelledby={`${labelId} ${buttonId}`}
