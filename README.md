@@ -48,9 +48,9 @@ The rest of the chatbot lifecycle runs on the same API:
   Playground. It shows "temporarily unavailable" while the chatbot is paused, and "no longer active"
   when the link is disabled or expired.
 
-The mock always contains two published demo chatbots: "Billing Assistant" (`demo_billing`) and
-"HR Assistant" (`demo_hr`). **Chatbots** in the sidebar, page header and breadcrumbs opens the chatbot
-list (`#/list`), which shows every chatbot.
+The mock always contains three published demo chatbots: "Billing Assistant" (`demo_billing`), "HR Assistant"
+(`demo_hr`) and "Property Assistant" (`demo_property`). **Chatbots** in the sidebar, page header and breadcrumbs
+opens the chatbot list (`#/list`), which shows every chatbot.
 
 **Knowledge and answers.** The detail page's **Knowledge base** tab adds files and web pages to an existing
 chatbot. When a file is uploaded, the mock keeps the original and reads its text, the way the server's
@@ -86,6 +86,16 @@ requests for `.pdf` files. If you edit a file, regenerate that module.
    and click **Add 1 to knowledge base**.
 4. When the document is ready, click **Test in Playground** and ask the same question. The chatbot answers
    with the $1,000 yearly training budget and cites the new policy.
+
+### Property Assistant demo
+
+The Property Assistant answers questions about a real estate demo website. Its files are in
+`sample-documents/property-assistant/` and are bundled into `src/services/propertySeedFiles.ts`. If you edit a file,
+regenerate that module and update the file's size in `src/services/propertyDocuments.ts`.
+
+Use this chatbot for the web widget on a separately hosted website. A chatbot created in the app exists only in that
+browser's storage for RAG Studio's address, so the widget on another site can't find it. Built-in chatbots are part of
+the code, so they work there.
 
 ## Stack
 

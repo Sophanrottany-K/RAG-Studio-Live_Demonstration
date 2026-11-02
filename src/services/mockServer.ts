@@ -42,6 +42,7 @@ import {
 } from "./types";
 import { DEMO_DOCUMENTS } from "./demoDocuments";
 import { HR_DOCUMENTS, loadSeedFile } from "./hrDocuments";
+import { PROPERTY_DOCUMENTS, loadPropertySeedFile } from "./propertyDocuments";
 import { fileStore } from "./documentStore";
 import { TEXT_VERSION, extractText } from "./extractText";
 import { computeAnalytics, computeUnanswered, type ChatEvent } from "./mockAnalytics";
@@ -174,13 +175,66 @@ function hrChatbot(): StoredChatbot {
   };
 }
 
+/** A third built-in chatbot, for the real estate website's web widget (see propertyDocuments.ts). */
+export const PROPERTY_CHATBOT_ID = "demo_property";
+
+const propertyStoredDocuments = (): StoredDocument[] =>
+  PROPERTY_DOCUMENTS.map(({ id, name, type, sizeBytes }) => ({
+    id,
+    kind: "file",
+    name,
+    type,
+    sizeBytes,
+    startsAt: 0,
+    readyAt: 0,
+  }));
+
+function propertyChatbot(): StoredChatbot {
+  const created = "2026-10-24T09:00:00.000Z";
+  return {
+    id: PROPERTY_CHATBOT_ID,
+    name: "Property Assistant",
+    description: "Answers home buyers' questions about Riverlane Homes' listings, viewings and the buying process.",
+    createdAt: created,
+    updatedAt: created,
+    published: "active",
+    channels: [],
+    settings: {
+      chatModel: "qwen3:8b",
+      embeddingModel: "bge-m3",
+      instructions:
+        "You are the property assistant for Riverlane Homes. Answer only from the provided documents, keep answers short and cite the source.",
+      tone: "Friendly",
+      answerLength: "Concise",
+      formatting: "Rich text",
+      language: "Auto-detect",
+      starterQuestions: [
+        "What is the price of the Garden House?",
+        "Which apartments are for sale?",
+        "How do I book a viewing?",
+      ],
+      sourceVisibility: "Full document",
+      advanced: {
+        temperature: 0.3,
+        topK: 5,
+        searchMode: "Hybrid",
+        chunkSize: 500,
+        chunkOverlap: 50,
+        documentsOnly: true,
+      },
+    },
+    documents: propertyStoredDocuments(),
+  };
+}
+
 /**
- * A document's stored file and text. The HR seed documents are loaded and read once, then kept in the file store
- * like an upload; any file whose text came from an older extractText is read again (`type` is its file type).
+ * A document's stored file and text. The HR and property seed documents are loaded and read once, then kept in the
+ * file store like an upload; any file whose text came from an older extractText is read again (`type` is its file type).
  * Returns what is stored, or null if the file can't be loaded.
  */
 async function ensureSeedFile(docId: string, type?: string) {
-  const seed = HR_DOCUMENTS.find((d) => d.id === docId);
+  const propertySeed = PROPERTY_DOCUMENTS.find((d) => d.id === docId);
+  const seed = propertySeed ?? HR_DOCUMENTS.find((d) => d.id === docId);
   const stored = await fileStore.get(docId);
   // Text read by an older extractor: read it again from the stored file.
   const fileType = seed?.type ?? type;
@@ -195,7 +249,7 @@ async function ensureSeedFile(docId: string, type?: string) {
   }
   if (stored || !seed) return stored;
   try {
-    const blob = await loadSeedFile(seed);
+    const blob = await (propertySeed ? loadPropertySeedFile(propertySeed) : loadSeedFile(seed));
     if (!blob.size) return null;
     const entry = { blob, text: await extractText(blob, seed.type), version: TEXT_VERSION };
     await fileStore.put(docId, entry);
@@ -254,6 +308,9 @@ function loadDb(): Db {
   const hr = db.chatbots.find((c) => c.id === HR_CHATBOT_ID);
   if (!hr) db.chatbots.push(hrChatbot());
   else hr.documents = [...hrStoredDocuments(), ...hr.documents.filter((d) => !isDemoDocument(d.id))];
+  const property = db.chatbots.find((c) => c.id === PROPERTY_CHATBOT_ID);
+  if (!property) db.chatbots.push(propertyChatbot());
+  else property.documents = [...propertyStoredDocuments(), ...property.documents.filter((d) => !isDemoDocument(d.id))];
   return db;
 }
 
@@ -721,7 +778,7 @@ async function documentOriginal(bot: Chatbot, docId: string): Promise<DocumentOr
   const demo = DEMO_DOCUMENTS.find((d) => d.id === docId);
   if (demo) return { document, file: null, text: demo.text, demo: demo.preview, uploadedAt: demo.uploadedAt };
   const stored = await ensureSeedFile(docId, document.type);
-  const seededAt = HR_DOCUMENTS.find((d) => d.id === docId)?.uploadedAt;
+  const seededAt = [...HR_DOCUMENTS, ...PROPERTY_DOCUMENTS].find((d) => d.id === docId)?.uploadedAt;
   const startsAt = loadDb()
     .chatbots.find((b) => b.id === bot.id)
     ?.documents.find((d) => d.id === docId)?.startsAt;
@@ -991,7 +1048,7 @@ function logChat(chatbotId: string, channel: AnalyticsChannel, visitor: string, 
 function deleteChatbot(id: string) {
   const db = loadDb();
   if (!db.chatbots.some((c) => c.id === id)) throw new ApiError("Chatbot not found.", 404, "not_found");
-  if (id === DEMO_CHATBOT_ID || id === HR_CHATBOT_ID)
+  if (id === DEMO_CHATBOT_ID || id === HR_CHATBOT_ID || id === PROPERTY_CHATBOT_ID)
     throw new ApiError("The built-in demo chatbots can't be deleted.", 409, "conflict");
   db.chatbots = db.chatbots.filter((c) => c.id !== id);
   delete db.channels[id];
