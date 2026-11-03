@@ -2,7 +2,7 @@
 // Route: #/w/:chatbotId?host=<site host> — loaded inside the loader's iframe, not on its own
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { Lock, MessageSquare, X } from "lucide-react";
+import { Lock, MessageCircleMore, X } from "lucide-react";
 import { ChatThread } from "../components/chat/ChatThread";
 import { api, isAbort, usingMockApi, watchChanges } from "../services/api";
 import { isLightColor } from "../services/limits";
@@ -128,7 +128,7 @@ export default function Screen48Widget() {
             color: isLightColor(embed.primaryColor ?? "#111111") ? "#111111" : "#FFFFFF",
           }}
         >
-          <MessageSquare className="size-6" />
+          <MessageCircleMore className="size-6" />
         </button>
       </div>
     );
@@ -217,7 +217,7 @@ export default function Screen48Widget() {
         className="size-14 shrink-0 rounded-full flex items-center justify-center cursor-pointer shadow-[0px_4px_12px_0px_#00000033] transition-transform hover:scale-105"
         style={{ background: color, color: onColor }}
       >
-        {open ? <X className="size-6" /> : <MessageSquare className="size-6" />}
+        {open ? <X className="size-6" /> : <MessageCircleMore className="size-6" />}
       </button>
     </div>
   );
