@@ -13,6 +13,7 @@
 //   POST   /chatbots/:id/publish                -> Chatbot  (pending -> active; creates the public link if there is none)
 //   PATCH  /chatbots/:id  { status: "active"|"paused" } -> Chatbot
 //   PATCH  /chatbots/:id  { name, description }   -> Chatbot
+//   PATCH  /chatbots/:id  { settings: EditableChatbotSettings } -> Chatbot (409 embedding_locked if the embedding model differs)
 //   DELETE /chatbots/:id                        -> void (also its channels and chat log)
 //   POST   /chatbots/:id/chat  { question }     -> ChatAnswer (playground; any status)
 //   POST   /chatbots/:id/documents  AddDocumentsRequest -> Chatbot (new documents start processing)
@@ -52,6 +53,7 @@ import {
   type ChatbotChannels,
   type CreateChatbotRequest,
   type DocumentOriginal,
+  type EditableChatbotSettings,
   type ModelCatalog,
   type PublicChat,
   type SavePublicLinkRequest,
@@ -146,6 +148,8 @@ export const api = {
     request<Chatbot>("PATCH", `/chatbots/${id}`, { status }),
   editChatbotDetails: (id: string, body: { name: string; description: string }) =>
     request<Chatbot>("PATCH", `/chatbots/${id}`, body),
+  editChatbotSettings: (id: string, settings: EditableChatbotSettings) =>
+    request<Chatbot>("PATCH", `/chatbots/${id}`, { settings }),
   askPlayground: (id: string, question: string, signal?: AbortSignal) =>
     request<ChatAnswer>("POST", `/chatbots/${id}/chat`, { question }, signal),
   addDocuments: (id: string, body: AddDocumentsRequest) => request<Chatbot>("POST", `/chatbots/${id}/documents`, body),

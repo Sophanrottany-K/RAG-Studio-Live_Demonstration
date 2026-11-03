@@ -1,5 +1,5 @@
-// Chatbot detail (status, publish / pause / resume / delete, Overview and Knowledge base tabs)
-// Route: #/bot?id=<chatbotId>&tab=knowledge  (also the old static detail routes: dDraft, dPend, active2, paused, …)
+// Chatbot detail (status, publish / pause / resume / delete, Overview, Knowledge base and Configuration tabs)
+// Route: #/bot?id=<chatbotId>&tab=knowledge|configuration  (also the old static detail routes: dDraft, dPend, active2, paused, …)
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppBreadcrumb, PageHeader } from "../components/analytics/ui";
@@ -14,6 +14,7 @@ import {
   OverviewStats,
   StarterQuestionsCard,
 } from "../components/chatbot/overview";
+import { ConfigurationTab } from "../components/chatbot/ConfigurationTab";
 import { EditDetailsDialog } from "../components/chatbot/EditDetailsDialog";
 import { DocumentViewer } from "../components/documents/DocumentViewer";
 import { KnowledgeTab } from "../components/knowledge/KnowledgeTab";
@@ -32,9 +33,10 @@ export default function Screen45Bot() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const id = params.get("id") ?? DEMO_CHATBOT_ID;
-  const tab = params.get("tab") === "knowledge" ? "knowledge" : "overview";
-  const setTab = (next: "overview" | "knowledge") =>
-    setParams({ id, ...(next === "knowledge" && { tab: next }) }, { replace: true });
+  const tabParam = params.get("tab");
+  const tab = tabParam === "knowledge" || tabParam === "configuration" ? tabParam : "overview";
+  const setTab = (next: "overview" | "knowledge" | "configuration") =>
+    setParams({ id, ...(next !== "overview" && { tab: next }) }, { replace: true });
   const { bot, setBot, error, reload } = useChatbot(id);
   const [viewing, setViewing] = useState<ChatbotDocument | null>(null);
   /** Takes a chatbot returned by the API and resumes polling if documents are processing again. */
@@ -160,8 +162,7 @@ export default function Screen45Bot() {
                 tabs={[
                   { label: "Overview", active: tab === "overview", onClick: () => setTab("overview") },
                   { label: "Knowledge base", active: tab === "knowledge", onClick: () => setTab("knowledge") },
-                  // Not part of this prototype yet, as in the Figma frames.
-                  { label: "Configuration", active: false },
+                  { label: "Configuration", active: tab === "configuration", onClick: () => setTab("configuration") },
                 ]}
               />
 
@@ -176,21 +177,28 @@ export default function Screen45Bot() {
                         onManage={() => setTab("knowledge")}
                         onView={setViewing}
                       />
-                      <StarterQuestionsCard questions={bot.settings.starterQuestions} />
+                      <StarterQuestionsCard
+                        questions={bot.settings.starterQuestions}
+                        onEdit={() => setTab("configuration")}
+                      />
                     </div>
                     <div className="min-w-0 space-y-6">
                       <ChannelsCard bot={bot} channels={channels} onManage={go(`/ch0?bot=${bot.id}`)} />
-                      <ConfigurationCard settings={bot.settings} />
+                      <ConfigurationCard settings={bot.settings} onEdit={() => setTab("configuration")} />
                       <DangerZoneCard bot={bot} onDelete={() => setConfirmDelete(true)} />
                     </div>
                   </div>
                 </div>
-              ) : (
+              ) : tab === "knowledge" ? (
                 <div className="flex flex-col items-start gap-6">
                   <DocumentStats documents={bot.documents} />
                   <KnowledgeTab bot={bot} onChange={update} onView={setViewing} onTest={go(`/pg?bot=${bot.id}`)} />
                 </div>
-              )}
+              ) : null}
+              {/* Stays mounted on the other tabs, so switching tabs doesn't lose unsaved edits. */}
+              <div hidden={tab !== "configuration"}>
+                <ConfigurationTab key={bot.id} bot={bot} onSaved={update} />
+              </div>
             </>
           )}
         </div>

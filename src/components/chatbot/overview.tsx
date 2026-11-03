@@ -642,9 +642,9 @@ export function KnowledgeBaseCard({
 }
 
 /** The questions a guest sees before they type anything. */
-export function StarterQuestionsCard({ questions }: { questions: string[] }) {
+export function StarterQuestionsCard({ questions, onEdit }: { questions: string[]; onEdit: () => void }) {
   return (
-    <Card title="Starter questions">
+    <Card title="Starter questions" action="Edit" onAction={onEdit}>
       {questions.length === 0 ? (
         <p className="text-p4 text-ink-muted">{"No starter questions yet."}</p>
       ) : (
@@ -734,8 +734,8 @@ export function ChannelsCard({
   );
 }
 
-/** Read-only summary of the chatbot's settings. */
-export function ConfigurationCard({ settings }: { settings: Chatbot["settings"] }) {
+/** Read-only summary of the chatbot's settings, with a link to the Configuration tab. */
+export function ConfigurationCard({ settings, onEdit }: { settings: Chatbot["settings"]; onEdit: () => void }) {
   const { advanced } = settings;
   const rows = [
     { label: "Chat model", value: settings.chatModel },
@@ -752,7 +752,7 @@ export function ConfigurationCard({ settings }: { settings: Chatbot["settings"] 
     { label: "Starter questions", value: `${settings.starterQuestions.length} of ${STARTER_QUESTIONS_MAX}` },
   ];
   return (
-    <Card title="Configuration">
+    <Card title="Configuration" action="Edit" onAction={onEdit}>
       <dl className="-mt-1">
         {rows.map(({ label, value }) => (
           <div

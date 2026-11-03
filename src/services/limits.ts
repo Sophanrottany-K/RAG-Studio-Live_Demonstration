@@ -1,5 +1,6 @@
 // Limits enforced by the backend. The UI checks them up front for instant feedback,
 // and the server (or the mock server) checks them again.
+import type { AdvancedSettings } from "./types";
 
 export const NAME_MIN = 2;
 export const NAME_MAX = 50;
@@ -7,6 +8,15 @@ export const DESCRIPTION_MAX = 200;
 export const INSTRUCTIONS_MAX = 2000;
 export const STARTER_QUESTIONS_MAX = 4;
 export const STARTER_QUESTION_MAX = 80;
+
+/** What is wrong with the advanced settings, or null when they are fine. */
+export function advancedSettingsError({ temperature, topK, chunkSize, chunkOverlap }: AdvancedSettings) {
+  if (temperature < 0 || temperature > 1) return "Temperature must be between 0 and 1.";
+  if (chunkSize < 100 || chunkSize > 2000) return "Chunk size must be between 100 and 2000 tokens.";
+  if (chunkOverlap < 0 || chunkOverlap >= chunkSize) return "Overlap must be 0 or more and smaller than the chunk size.";
+  if (topK < 1 || topK > 20) return "Top K must be between 1 and 20.";
+  return null;
+}
 
 export const FILE_TYPES = ["PDF", "DOCX", "TXT", "MD", "XLSX"] as const;
 export const FILE_ACCEPT = ".pdf,.docx,.txt,.md,.xlsx";

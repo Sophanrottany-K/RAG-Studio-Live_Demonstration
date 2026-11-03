@@ -1,12 +1,31 @@
 // Building blocks for Create chatbot · Step 2, matching the RAG Studio web app
 // (ragstudio-web-ui: create-chatbot-wizard, wizard-stepper, wizard-aside, form-field, segmented).
-import type { ReactNode } from "react";
-import { Check, Circle } from "lucide-react";
+// The settings fields are also used by the Configuration tab of the chatbot detail page.
+import { useState, type ReactNode } from "react";
+import { Check, ChevronDown, Circle, Plus, ShieldCheck, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { initials, sourceCounts, useChatbotDraft } from "../../lib/chatbotDraft";
+import { INSTRUCTIONS_MAX, STARTER_QUESTIONS_MAX, STARTER_QUESTION_MAX } from "../../services/limits";
+import type { AdvancedSettings, ChatbotSettings, ModelCatalog, SearchMode } from "../../services/types";
+import { Select } from "../analytics/Select";
 import { STEPS } from "./CreateStepper";
+import { Banner, Toggle } from "./ui";
 
 const cx = (...classes: (string | false | null | undefined)[]) => classes.filter(Boolean).join(" ");
+
+const TONES = ["Professional", "Friendly", "Casual", "Formal"] as const;
+const LENGTHS = ["Concise", "Detailed"] as const;
+const FORMATS = ["Rich text", "Plain text only"] as const;
+const LANGUAGES = ["Auto-detect", "English", "Khmer", "Korean"];
+const VISIBILITY = ["Full document", "Name only", "Hidden"] as const;
+const SEARCH_MODES: { value: SearchMode; label: string }[] = [
+  { value: "Hybrid", label: "Hybrid (keyword + meaning)" },
+  { value: "Semantic", label: "Meaning only" },
+  { value: "Keyword", label: "Keyword only" },
+];
+
+export const modelOptions = (models: ModelCatalog["chat"] = []) =>
+  models.map((m) => ({ value: m.id, label: m.isDefault ? `${m.label} · default` : m.label }));
 
 /** Shared by the number and text inputs. */
 export const inputClass =
@@ -117,6 +136,368 @@ export function Segmented<T extends string>({
           {option}
         </button>
       ))}
+    </div>
+  );
+}
+
+type BehaviorSettings = Pick<
+  ChatbotSettings,
+  "instructions" | "tone" | "answerLength" | "formatting" | "language" | "sourceVisibility"
+>;
+
+/** The "Behavior" and "Answer behavior" blocks of fields. */
+export function BehaviorFields({
+  settings,
+  onChange,
+  instructionsError,
+}: {
+  settings: BehaviorSettings;
+  onChange: (change: Partial<BehaviorSettings>) => void;
+  /** Shown under the system instructions; null when there is nothing to report yet. */
+  instructionsError: string | null;
+}) {
+  return (
+    <>
+      <FieldSection title="Behavior">
+        <FormField
+          htmlFor="instructions"
+          label="System instructions"
+          hint="Tells the chatbot who it is and how to answer."
+          error={instructionsError}
+        >
+          <textarea
+            id="instructions"
+            rows={4}
+            maxLength={INSTRUCTIONS_MAX}
+            aria-invalid={!!instructionsError || undefined}
+            value={settings.instructions}
+            placeholder="You are the support assistant for Acme. Answer only from the documents."
+            onChange={(e) => onChange({ instructions: e.target.value })}
+            className={textareaClass}
+          />
+        </FormField>
+        <FormField label="Tone preset">
+          <Segmented
+            label="Tone preset"
+            options={TONES}
+            value={settings.tone}
+            onChange={(tone) => onChange({ tone })}
+          />
+        </FormField>
+      </FieldSection>
+
+      <FieldSection title="Answer behavior">
+        <div className="flex flex-wrap gap-8">
+          <FormField label="Answer length">
+            <Segmented
+              label="Answer length"
+              options={LENGTHS}
+              value={settings.answerLength}
+              onChange={(answerLength) => onChange({ answerLength })}
+            />
+          </FormField>
+          <FormField label="Formatting">
+            <Segmented
+              label="Formatting"
+              options={FORMATS}
+              value={settings.formatting}
+              onChange={(formatting) => onChange({ formatting })}
+            />
+          </FormField>
+        </div>
+        <FormField
+          label="Language"
+          hint="Supports English, Khmer and Korean. Auto-detect replies in whichever of these the guest writes in."
+        >
+          <Select
+            label="Language"
+            options={LANGUAGES.map((l) => ({ value: l, label: l }))}
+            value={settings.language}
+            onChange={(language) => onChange({ language })}
+          />
+        </FormField>
+        <FormField label="Source visibility" hint="How much of a cited source a guest may open.">
+          <Segmented
+            label="Source visibility"
+            options={VISIBILITY}
+            value={settings.sourceVisibility}
+            onChange={(sourceVisibility) => onChange({ sourceVisibility })}
+          />
+        </FormField>
+      </FieldSection>
+    </>
+  );
+}
+
+export type StarterQuestion = { id: string; text: string };
+
+export const starterQuestionId = () => Math.random().toString(36).slice(2, 10);
+
+/** The list of starter questions: add, remove, drag to reorder. */
+export function StarterQuestionsField({
+  questions,
+  onChange,
+}: {
+  questions: StarterQuestion[];
+  onChange: (next: StarterQuestion[]) => void;
+}) {
+  const [text, setText] = useState("");
+  const [dragging, setDragging] = useState<string | null>(null);
+  const full = questions.length >= STARTER_QUESTIONS_MAX;
+
+  const add = () => {
+    const question = text.trim();
+    if (!question || full) return;
+    onChange([...questions, { id: starterQuestionId(), text: question }]);
+    setText("");
+  };
+  const move = (fromId: string, toId: string) => {
+    const from = questions.findIndex((q) => q.id === fromId);
+    const to = questions.findIndex((q) => q.id === toId);
+    if (from < 0 || to < 0 || from === to) return;
+    const next = [...questions];
+    next.splice(to, 0, next.splice(from, 1)[0]);
+    onChange(next);
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-4">
+        <label htmlFor="starter-question-new" className="text-p4 text-ink font-bold">
+          Starter questions
+        </label>
+        <span className="text-c1 text-ink-muted tabular">{`${questions.length}/${STARTER_QUESTIONS_MAX}`}</span>
+      </div>
+
+      {questions.length > 0 && (
+        <ul className="flex flex-col gap-2">
+          {questions.map((q) => (
+            <li
+              key={q.id}
+              draggable
+              title="Drag to reorder"
+              onDragStart={() => setDragging(q.id)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (dragging) move(dragging, q.id);
+              }}
+              onDragEnd={() => setDragging(null)}
+              className={`rounded-input border border-line bg-subtle flex cursor-grab items-center gap-2 px-4 py-2 active:cursor-grabbing ${dragging === q.id ? "opacity-50" : ""}`}
+            >
+              <span className="text-p3 text-ink-body flex-1 truncate">{q.text}</span>
+              <button
+                type="button"
+                aria-label={`Remove "${q.text}"`}
+                onClick={() => onChange(questions.filter((x) => x.id !== q.id))}
+                className="rounded-small text-ink-muted hover:bg-card hover:text-danger-text inline-flex size-8 cursor-pointer items-center justify-center transition-colors"
+              >
+                <X className="size-4" aria-hidden />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {!full && (
+        <div className="flex gap-2">
+          <input
+            id="starter-question-new"
+            value={text}
+            maxLength={STARTER_QUESTION_MAX}
+            placeholder="How do I get a refund?"
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              // Enter adds the question instead of submitting the whole form.
+              if (e.key === "Enter") {
+                e.preventDefault();
+                add();
+              }
+            }}
+            className={inputClass}
+          />
+          <button
+            type="button"
+            onClick={add}
+            disabled={!text.trim()}
+            className="rounded-input border border-line text-btn-sm text-ink hover:bg-subtle inline-flex h-12 shrink-0 cursor-pointer items-center gap-2 px-4 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Plus className="size-4" aria-hidden />
+            Add
+          </button>
+        </div>
+      )}
+
+      <p className="text-c1 text-ink-secondary">
+        {full
+          ? `You have all ${STARTER_QUESTIONS_MAX} starter questions. Remove one to add another.`
+          : "Shown as buttons when a guest opens the chat."}
+      </p>
+    </div>
+  );
+}
+
+/** How far answers may stray from the documents. */
+export function GroundingNote({ documentsOnly }: { documentsOnly: boolean }) {
+  return (
+    <FieldSection title="Grounding and citations">
+      <Note icon={<ShieldCheck className="size-4" aria-hidden />}>
+        {documentsOnly
+          ? "Answers always come only from your documents, with citations."
+          : "Answers come from your documents first, with citations, and may use general knowledge."}
+      </Note>
+    </FieldSection>
+  );
+}
+
+function NumberField({
+  name,
+  label,
+  hint,
+  value,
+  onChange,
+  min,
+  max,
+  step,
+}: {
+  name: string;
+  label: string;
+  hint: string;
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  step: number;
+}) {
+  return (
+    <FormField htmlFor={name} label={label} hint={hint}>
+      <input
+        id={name}
+        type="number"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => {
+          // An empty box gives NaN. Keep the old value until a number is typed.
+          const next = e.target.valueAsNumber;
+          if (!Number.isNaN(next)) onChange(next);
+        }}
+        className={inputClass}
+      />
+    </FormField>
+  );
+}
+
+/** The fold-out "Advanced configuration" panel: generation, retrieval and chunking. */
+export function AdvancedPanel({
+  advanced,
+  onChange,
+  open,
+  onToggle,
+  error,
+}: {
+  advanced: AdvancedSettings;
+  onChange: (change: Partial<AdvancedSettings>) => void;
+  open: boolean;
+  onToggle: () => void;
+  error: string | null;
+}) {
+  return (
+    <div className="rounded-card-sm border border-line">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={onToggle}
+        className="flex w-full cursor-pointer items-center gap-4 px-6 py-5 text-left"
+      >
+        <span className="flex-1">
+          <span className="text-s2 text-ink block">Advanced configuration</span>
+          <span className="text-c1 text-ink-secondary block">
+            Generation, retrieval and chunking. The defaults work for most chatbots.
+          </span>
+        </span>
+        <ChevronDown
+          className={`text-ink-muted size-5 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          aria-hidden
+        />
+      </button>
+      {open && (
+        <div className="border-t border-line flex flex-col gap-8 px-6 py-6">
+          {error && <Banner tone="danger">{error}</Banner>}
+          <FieldSection title="Generation">
+            <div className="grid grid-cols-2 gap-5">
+              <NumberField
+                name="temperature"
+                label="Temperature"
+                hint="Lower is more exact. Higher is more varied. 0–1."
+                value={advanced.temperature}
+                onChange={(temperature) => onChange({ temperature })}
+                min={0}
+                max={1}
+                step={0.1}
+              />
+            </div>
+          </FieldSection>
+          <FieldSection title="Retrieval">
+            <div className="grid grid-cols-2 gap-5">
+              <NumberField
+                name="topK"
+                label="Top K results"
+                hint="How many chunks to read before answering. 1–20."
+                value={advanced.topK}
+                onChange={(topK) => onChange({ topK })}
+                min={1}
+                max={20}
+                step={1}
+              />
+              <FormField label="Search mode" hint="Hybrid works best for most knowledge bases.">
+                <Select
+                  label="Search mode"
+                  options={SEARCH_MODES}
+                  value={advanced.searchMode}
+                  onChange={(searchMode) => onChange({ searchMode: searchMode as SearchMode })}
+                />
+              </FormField>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-1">
+                <div className="text-p4 text-ink font-bold">Answer only from documents</div>
+                <div className="text-c1 text-ink-secondary">
+                  When off, the chatbot may use general knowledge if documents don't cover a question.
+                </div>
+              </div>
+              <Toggle
+                label="Answer only from documents"
+                checked={advanced.documentsOnly}
+                onChange={(documentsOnly) => onChange({ documentsOnly })}
+              />
+            </div>
+          </FieldSection>
+          <FieldSection title="Chunking">
+            <div className="grid grid-cols-2 gap-5">
+              <NumberField
+                name="chunkSize"
+                label="Chunk size"
+                hint="Tokens per chunk. 100–2000."
+                value={advanced.chunkSize}
+                onChange={(chunkSize) => onChange({ chunkSize })}
+                min={100}
+                max={2000}
+                step={50}
+              />
+              <NumberField
+                name="chunkOverlap"
+                label="Chunk overlap"
+                hint="Tokens repeated between chunks."
+                value={advanced.chunkOverlap}
+                onChange={(chunkOverlap) => onChange({ chunkOverlap })}
+                min={0}
+                step={10}
+              />
+            </div>
+          </FieldSection>
+        </div>
+      )}
     </div>
   );
 }

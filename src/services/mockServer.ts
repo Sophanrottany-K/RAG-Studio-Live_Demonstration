@@ -11,8 +11,10 @@ import {
   NAME_MIN,
   SOURCES_MAX,
   STARTER_QUESTIONS_MAX,
+  STARTER_QUESTION_MAX,
   LINK_TITLE_MAX,
   WELCOME_MESSAGE_MAX,
+  advancedSettingsError,
   fileTypeOf,
   isHexColor,
   isTelegramToken,
@@ -29,6 +31,7 @@ import {
   type ChatbotDocument,
   type CreateChatbotRequest,
   type DocumentOriginal,
+  type EditableChatbotSettings,
   type AnalyticsChannel,
   type AnalyticsGranularity,
   type ModelCatalog,
@@ -415,6 +418,25 @@ function queueSources(db: Db, uploadIds: string[], urls: string[], startAfter: n
   return { documents, moves };
 }
 
+/** The rules for settings, both when a chatbot is created and when they are edited later. */
+function checkSettings(settings: EditableChatbotSettings) {
+  if (!MODELS.chat.some((m) => m.id === settings.chatModel))
+    throw new ApiError("This chat model is not enabled.", 422, "invalid", "chatModel");
+  if (!settings.instructions.trim() || settings.instructions.length > INSTRUCTIONS_MAX)
+    throw new ApiError("System instructions are required.", 422, "invalid", "instructions");
+  if (settings.starterQuestions.length > STARTER_QUESTIONS_MAX)
+    throw new ApiError("Too many starter questions.", 422, "invalid", "starterQuestions");
+  if (settings.starterQuestions.some((q) => !q.trim() || q.length > STARTER_QUESTION_MAX))
+    throw new ApiError(
+      `Starter questions must be 1–${STARTER_QUESTION_MAX} characters.`,
+      422,
+      "invalid",
+      "starterQuestions",
+    );
+  const advancedError = advancedSettingsError(settings.advanced);
+  if (advancedError) throw new ApiError(advancedError, 422, "invalid", "advanced");
+}
+
 async function createChatbot(body: CreateChatbotRequest): Promise<Chatbot> {
   const db = loadDb();
   const name = body.name.trim();
@@ -423,14 +445,9 @@ async function createChatbot(body: CreateChatbotRequest): Promise<Chatbot> {
   if (body.description.length > DESCRIPTION_MAX)
     throw new ApiError("Description is too long.", 422, "invalid", "description");
   const { settings } = body;
-  if (!MODELS.chat.some((m) => m.id === settings.chatModel))
-    throw new ApiError("This chat model is not enabled.", 422, "invalid", "chatModel");
+  checkSettings(settings);
   if (!MODELS.embedding.some((m) => m.id === settings.embeddingModel))
     throw new ApiError("This embedding model is not enabled.", 422, "invalid", "embeddingModel");
-  if (!settings.instructions.trim() || settings.instructions.length > INSTRUCTIONS_MAX)
-    throw new ApiError("System instructions are required.", 422, "invalid", "instructions");
-  if (settings.starterQuestions.length > STARTER_QUESTIONS_MAX)
-    throw new ApiError("Too many starter questions.", 422, "invalid", "starterQuestions");
   if (body.uploadIds.length + body.urls.length > SOURCES_MAX)
     throw new ApiError(`At most ${SOURCES_MAX} sources per chatbot.`, 422, "invalid", "sources");
 
@@ -737,6 +754,23 @@ const editChatbotDetails = (chatbotId: string, body: { name?: unknown; descripti
       throw new ApiError("Description is too long.", 422, "invalid", "description");
     bot.name = name;
     bot.description = body.description.trim();
+  });
+
+/** Changes the chatbot's settings. The embedding model stays what it was when the chatbot was created. */
+const editChatbotSettings = (
+  chatbotId: string,
+  { embeddingModel, ...settings }: EditableChatbotSettings & { embeddingModel?: unknown },
+) =>
+  updateChatbot(chatbotId, (bot) => {
+    if (embeddingModel !== undefined && embeddingModel !== bot.settings.embeddingModel)
+      throw new ApiError(
+        "The embedding model cannot be changed after the chatbot is created.",
+        409,
+        "embedding_locked",
+        "embeddingModel",
+      );
+    checkSettings(settings);
+    bot.settings = { ...settings, embeddingModel: bot.settings.embeddingModel };
   });
 
 // ---- Knowledge base ---------------------------------------------------------------------
@@ -1118,9 +1152,11 @@ export async function mockRequest<T>(method: string, path: string, body?: unknow
   if ((match = route.match(/^POST \/chatbots\/([\w-]+)\/publish$/))) return publishChatbot(match[1]) as T;
   if ((match = route.match(/^PATCH \/chatbots\/([\w-]+)$/)))
     return (
-      body && typeof body === "object" && "name" in body
-        ? editChatbotDetails(match[1], body as { name?: unknown; description?: unknown })
-        : setChatbotStatus(match[1], (body as { status?: unknown })?.status)
+      body && typeof body === "object" && "settings" in body
+        ? editChatbotSettings(match[1], (body as { settings: EditableChatbotSettings }).settings)
+        : body && typeof body === "object" && "name" in body
+          ? editChatbotDetails(match[1], body as { name?: unknown; description?: unknown })
+          : setChatbotStatus(match[1], (body as { status?: unknown })?.status)
     ) as T;
   if ((match = route.match(/^POST \/chatbots\/([\w-]+)\/chat$/))) {
     const found = loadDb().chatbots.find((c) => c.id === match![1]);

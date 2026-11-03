@@ -56,6 +56,9 @@ export type ChatbotSettings = {
   advanced: AdvancedSettings;
 };
 
+/** Everything that can change after creation. The embedding model is fixed when the chatbot is created. */
+export type EditableChatbotSettings = Omit<ChatbotSettings, "embeddingModel">;
+
 export type CreateChatbotRequest = {
   name: string;
   description: string;
