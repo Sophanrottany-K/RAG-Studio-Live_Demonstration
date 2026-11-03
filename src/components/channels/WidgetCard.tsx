@@ -24,8 +24,8 @@ const PREVIEW_DOMAIN = "shop.example.com";
 
 const INSTALL_STEPS = [
   {
-    title: "Allow your website's domain",
-    text: "In Allowed domains above, add the address your website runs on, without http:// — e.g. localhost:3000 while you develop, or shop.example.com once it's online. Then click Save and generate widget code.",
+    title: "Add a domain",
+    text: "In Allowed domains above, add a domain without http:// — e.g. shop.example.com. It doesn't have to be your website's real address: any website with the snippet can show the widget. Then click Save and generate widget code.",
   },
   {
     title: "Copy the embed code",
@@ -41,12 +41,12 @@ const INSTALL_STEPS = [
   },
   {
     title: "Open your website",
-    text: "Refresh the page. The chat bubble appears in the bottom corner; click it to chat. Nothing there? Open the browser console: the widget explains why (domain not allowed, widget disabled…).",
+    text: "Refresh the page. The chat bubble appears in the bottom corner; click it to chat. Nothing there? Open the browser console: the widget explains why (e.g. widget disabled).",
   },
 ];
 
 const CHROME_STEPS = [
-  "Open your website in Chrome. Its address must be in Allowed domains above.",
+  "Open your website in Chrome.",
   "Press F12 (or Ctrl+Shift+J, Cmd+Option+J on Mac) and open the Console tab.",
   "The first time, Chrome blocks pasting: type allow pasting and press Enter.",
   "Paste the code below and press Enter. The chat bubble appears in the bottom corner — click it to chat.",
@@ -158,7 +158,7 @@ export function WidgetCard({
       codeFeedback.show({
         tone: "success",
         text: enabling
-          ? "Widget enabled. It now shows on your allowed domains."
+          ? "Widget enabled. It now shows on every website with the snippet."
           : "Widget disabled. It no longer shows on your website.",
       });
     } catch (e) {
@@ -273,7 +273,9 @@ export function WidgetCard({
                 {widget.enabled ? (
                   <>
                     <p className="text-c1 text-ink-secondary mt-3">
-                      {"Paste the snippet before </body> on your website. The widget appears on allowed domains only."}
+                      {
+                        "Paste the snippet before </body> on your website. The widget appears on any website with the snippet."
+                      }
                     </p>
                     <InstallGuide snippet={snippet} />
                     <ChromeGuide snippet={snippet} />

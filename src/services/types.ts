@@ -187,7 +187,7 @@ export type WidgetChat = {
   sourceVisibility: SourceVisibility;
   available: boolean;
   /** paused / not_published: the bubble shows "temporarily unavailable". The others hide the widget. */
-  reason?: "paused" | "not_published" | "disabled" | "not_configured" | "domain_not_allowed";
+  reason?: "paused" | "not_published" | "disabled" | "not_configured";
 };
 
 /** Body of POST /chatbots/:id/documents: more sources for an existing chatbot. */

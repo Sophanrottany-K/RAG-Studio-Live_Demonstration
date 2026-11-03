@@ -599,16 +599,8 @@ function embeddedWidget(embed?: Partial<WidgetEmbed>): WidgetEmbed | null {
   };
 }
 
-/** Whether the site at `host` (e.g. "localhost:3000", "shop.example.com") is one of the allowed domains. */
-function hostAllowed(host: string, allowed: string[]) {
-  const full = host.toLowerCase();
-  const name = full.replace(/:\d+$/, "");
-  return allowed.some((d) =>
-    d.startsWith("*.") ? name === d.slice(2) || name.endsWith(d.slice(1)) : d === full || d === name,
-  );
-}
-
-function findWidget(chatbotId: string, host: string, embed?: Partial<WidgetEmbed>) {
+/** Allowed domains are not enforced: the widget works on any site that has the snippet, whatever its address. */
+function findWidget(chatbotId: string, embed?: Partial<WidgetEmbed>) {
   const db = loadDb();
   const stored = db.chatbots.find((b) => b.id === chatbotId);
   if (!stored) throw new ApiError("Chatbot not found.", 404, "not_found");
@@ -621,13 +613,11 @@ function findWidget(chatbotId: string, host: string, embed?: Partial<WidgetEmbed
     ? "not_configured"
     : !widget.enabled
       ? "disabled"
-      : !hostAllowed(host, widget.allowedDomains)
-        ? "domain_not_allowed"
-        : bot.status === "paused"
-          ? "paused"
-          : bot.status !== "active"
-            ? "not_published"
-            : undefined;
+      : bot.status === "paused"
+        ? "paused"
+        : bot.status !== "active"
+          ? "not_published"
+          : undefined;
   const chat: WidgetChat = {
     chatbotName: bot.name,
     primaryColor: widget.primaryColor,
@@ -1154,13 +1144,12 @@ export async function mockRequest<T>(method: string, path: string, body?: unknow
       welcomeMessage: q.get("welcome") ?? undefined,
       allowedDomains: q.get("domains")?.split(",").filter(Boolean),
     };
-    return findWidget(match[1], q.get("host") ?? "", embed).chat as T;
+    return findWidget(match[1], embed).chat as T;
   }
   if ((match = route.match(/^POST \/widget\/([\w-]+)\/chat$/))) {
-    const { question, host, embed } = (body ?? {}) as { question?: unknown; host?: unknown; embed?: unknown };
+    const { question, embed } = (body ?? {}) as { question?: unknown; embed?: unknown };
     const { bot, chat } = findWidget(
       match[1],
-      typeof host === "string" ? host : "",
       embed && typeof embed === "object" ? (embed as Partial<WidgetEmbed>) : undefined,
     );
     if (!chat.available) throw new ApiError("This chatbot is temporarily unavailable.", 503, "chatbot_unavailable");

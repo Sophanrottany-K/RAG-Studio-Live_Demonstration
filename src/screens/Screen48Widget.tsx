@@ -17,8 +17,6 @@ const UNAVAILABLE = {
 const HIDDEN: Record<string, (host: string) => string> = {
   not_configured: () => "the widget hasn't been generated yet (RAG Studio → Channels → Web Widget).",
   disabled: () => "the widget is disabled in RAG Studio (Channels → Web Widget → Enable).",
-  domain_not_allowed: (host) =>
-    `"${host}" isn't in the widget's Allowed domains. Add it in RAG Studio and click Save and generate widget code.`,
   not_found: () => "no chatbot has this data-chatbot-id. Copy the embed code from RAG Studio again.",
   no_storage_access: () =>
     "Chrome didn't let the widget read RAG Studio's data on this site (third-party cookies are blocked). " +
@@ -61,8 +59,8 @@ export default function Screen48Widget() {
     return () => els.forEach((el) => (el.style.background = ""));
   }, []);
 
-  // Load the widget, then keep it in step with the owner: disabling it, pausing the chatbot or removing the
-  // domain takes effect without reloading the website.
+  // Load the widget, then keep it in step with the owner: disabling it or pausing the chatbot takes effect
+  // without reloading the website.
   useEffect(() => {
     let controller: AbortController | null = null;
     const storage = usingMockApi ? connectSiteStorage() : Promise.resolve(false);
