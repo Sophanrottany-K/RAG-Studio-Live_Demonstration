@@ -29,7 +29,7 @@ const labelOf = (options: { value: string; label: string }[], value: string) =>
 
 export default function Screen04List() {
   const go = useGo();
-  const [stats, setStats] = useState<ChatbotStats>({ total: 8, active: 3, notLive: 4, disabled: 1, shown: 8 });
+  const [stats, setStats] = useState<ChatbotStats>({ total: 0, active: 0, notLive: 0, disabled: 0, shown: 0 });
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [sort, setSort] = useState<NameSort>("az");
@@ -78,7 +78,7 @@ export default function Screen04List() {
                       </div>
                     </div>
                     <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[13px] leading-[16px] text-[#5B6072]">
-                      {`${Math.round((stats.active / stats.total) * 100)}% of chatbots`}
+                      {`${stats.total ? Math.round((stats.active / stats.total) * 100) : 0}% of chatbots`}
                     </div>
                   </div>
                 </div>
