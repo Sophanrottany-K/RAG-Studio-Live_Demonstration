@@ -26,8 +26,8 @@
 
   var base = script.src.replace(/[^/]*$/, ""); // the RAG Studio address that served this file
   var studioOrigin = new URL(base).origin;
-  var CLOSED = { width: 88, height: 88 };
-  var OPEN = { width: 412, height: 720 };
+  var CLOSED = { width: 96, height: 96 };
+  var OPEN = { width: 460, height: 800 };
 
   var frame = document.createElement("iframe");
   frame.title = "Chat with us";
@@ -45,6 +45,7 @@
   });
   frame.src = base + "#/w/" + encodeURIComponent(chatbotId) + query;
   frame.setAttribute("allowtransparency", "true");
+  frame.setAttribute("scrolling", "no");
   frame.style.cssText =
     "position:fixed;bottom:8px;right:8px;border:0;background:transparent;color-scheme:normal;" +
     "z-index:2147483000;display:none;width:" +

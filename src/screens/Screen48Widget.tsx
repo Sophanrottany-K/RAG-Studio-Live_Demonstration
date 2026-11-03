@@ -53,11 +53,19 @@ export default function Screen48Widget() {
   const [needsAccess, setNeedsAccess] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
-  // The iframe must be see-through around the bubble.
+  // The iframe must be see-through around the bubble, and never scroll: it is resized to fit, and the window
+  // can be drawn for a moment before the frame has grown.
   useEffect(() => {
     const els = [document.documentElement, document.body];
-    els.forEach((el) => (el.style.background = "transparent"));
-    return () => els.forEach((el) => (el.style.background = ""));
+    els.forEach((el) => {
+      el.style.background = "transparent";
+      el.style.overflow = "hidden";
+    });
+    return () =>
+      els.forEach((el) => {
+        el.style.background = "";
+        el.style.overflow = "";
+      });
   }, []);
 
   // Load the widget, then keep it in step with the owner: disabling it or pausing the chatbot takes effect
@@ -122,13 +130,13 @@ export default function Screen48Widget() {
               setAttempt((n) => n + 1);
             } else setHidden(HIDDEN.no_storage_access(host));
           }}
-          className="size-14 shrink-0 rounded-full flex items-center justify-center cursor-pointer shadow-[0px_4px_12px_0px_#00000033] transition-transform hover:scale-105"
+          className="size-16 shrink-0 rounded-full flex items-center justify-center cursor-pointer shadow-[0px_4px_12px_0px_#00000033] transition-transform hover:scale-105"
           style={{
             background: embed.primaryColor ?? "#111111",
             color: isLightColor(embed.primaryColor ?? "#111111") ? "#111111" : "#FFFFFF",
           }}
         >
-          <MessageCircleMore className="size-6" />
+          <MessageCircleMore className="size-7" />
         </button>
       </div>
     );
@@ -148,7 +156,7 @@ export default function Screen48Widget() {
         <div
           role="dialog"
           aria-label={`Chat with ${chat.chatbotName}`}
-          className="w-full flex-1 min-h-0 flex flex-col overflow-hidden rounded-[24px] border border-[#E4E4E0] bg-[#FFFFFF] shadow-[0px_4px_14px_0px_#0000001F] font-gabarito"
+          className="w-full flex-1 min-h-0 flex flex-col overflow-hidden rounded-[24px] border border-[#E4E4E0] bg-[#FFFFFF] shadow-[0px_4px_14px_0px_#0000001F] font-gabarito [&_*]:[scrollbar-width:none] [&_*::-webkit-scrollbar]:hidden"
         >
           <div className="shrink-0 flex items-center gap-3 border-b border-[#E4E4E0] px-4 py-3">
             <div
@@ -214,10 +222,10 @@ export default function Screen48Widget() {
         aria-expanded={open}
         aria-label={open ? "Close chat" : `Chat with ${chat.chatbotName}`}
         onClick={() => setOpen((o) => !o)}
-        className="size-14 shrink-0 rounded-full flex items-center justify-center cursor-pointer shadow-[0px_4px_12px_0px_#00000033] transition-transform hover:scale-105"
+        className="size-16 shrink-0 rounded-full flex items-center justify-center cursor-pointer shadow-[0px_4px_12px_0px_#00000033] transition-transform hover:scale-105"
         style={{ background: color, color: onColor }}
       >
-        {open ? <X className="size-6" /> : <MessageCircleMore className="size-6" />}
+        {open ? <X className="size-7" /> : <MessageCircleMore className="size-7" />}
       </button>
     </div>
   );

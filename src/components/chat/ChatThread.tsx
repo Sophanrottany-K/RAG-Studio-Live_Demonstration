@@ -116,7 +116,7 @@ export function ChatThread({
                       }`}
                     </div>
                   </div>
-                  <div className="max-w-[85%] font-gabarito text-[15px] leading-[24px] text-ink-body-2 whitespace-pre-wrap">
+                  <div className="max-w-[85%] font-gabarito text-[15px] leading-[24px] text-ink-body-2 whitespace-pre-wrap [overflow-wrap:anywhere]">
                     {m.answer.answer}
                   </div>
                   {sources !== "hidden" && m.answer.sources.length > 0 && (
@@ -124,7 +124,7 @@ export function ChatThread({
                       <div className="font-gabarito font-medium text-[13px] text-ink-secondary">
                         {`Retrieved sources (${m.answer.sources.length})`}
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="max-w-full flex flex-wrap gap-2">
                         {m.answer.sources.map((s) =>
                           sources === "clickable" && onOpenSource ? (
                             <button
@@ -132,19 +132,22 @@ export function ChatThread({
                               type="button"
                               title={s.snippet}
                               onClick={() => onOpenSource(s)}
-                              className="flex items-center gap-2 bg-[#FFFFFF] border border-[#E4E4E0] rounded-full pl-1.5 pr-3 py-1 hover:bg-bg-soft cursor-pointer"
+                              className="max-w-full flex items-center gap-2 bg-[#FFFFFF] border border-[#E4E4E0] rounded-full pl-1.5 pr-3 py-1 hover:bg-bg-soft cursor-pointer"
                             >
                               <SourceBadge type={s.type} />
-                              <span className="font-gabarito font-medium text-[13px] text-[#111111]">{s.name}</span>
+                              <span className="min-w-0 truncate font-gabarito font-medium text-[13px] text-[#111111]">
+                                {s.name}
+                              </span>
                               <span className="text-[12px] text-ink-muted">↗</span>
                             </button>
                           ) : (
                             <span
                               key={s.documentId}
-                              className="flex items-center gap-2 bg-[#FAFAF9] border border-[#ECECEA] rounded-full pl-1.5 pr-3 py-1"
+                              title={s.name}
+                              className="max-w-full flex items-center gap-2 bg-[#FAFAF9] border border-[#ECECEA] rounded-full pl-1.5 pr-3 py-1"
                             >
                               <SourceBadge type={s.type} />
-                              <span className="font-gabarito text-[13px] text-[#444444]">{s.name}</span>
+                              <span className="min-w-0 truncate font-gabarito text-[13px] text-[#444444]">{s.name}</span>
                             </span>
                           ),
                         )}
@@ -218,7 +221,7 @@ export function ChatThread({
 
 function SourceBadge({ type }: { type: string }) {
   return (
-    <span className="h-5 rounded-[5px] bg-[#F3F3F1] px-1.5 flex items-center font-geist-mono text-[9px] text-[#525252]">
+    <span className="h-5 shrink-0 rounded-[5px] bg-[#F3F3F1] px-1.5 flex items-center font-geist-mono text-[9px] text-[#525252]">
       {type}
     </span>
   );
