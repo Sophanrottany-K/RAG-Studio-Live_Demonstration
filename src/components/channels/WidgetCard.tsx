@@ -14,7 +14,7 @@ const PREVIEW_DOMAIN = "shop.example.com";
 
 const WIDGET_COLORS = [
   { name: "Violet", hex: "#8b5cf6" },
-  { name: "Blue", hex: "#3b82f6" },
+  { name: "Blue", hex: "#1376a9" },
   { name: "Cyan", hex: "#06b6d4" },
   { name: "Dark gray", hex: "#111827" },
 ];
