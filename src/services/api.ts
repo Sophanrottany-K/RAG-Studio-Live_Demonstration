@@ -10,7 +10,7 @@
 //   POST   /chatbots    CreateChatbotRequest    -> Chatbot  (documents start processing)
 //   GET    /chatbots                            -> Chatbot[]
 //   GET    /chatbots/:id                        -> Chatbot
-//   POST   /chatbots/:id/publish                -> Chatbot  (pending -> active)
+//   POST   /chatbots/:id/publish                -> Chatbot  (pending -> active; creates the public link if there is none)
 //   PATCH  /chatbots/:id  { status: "active"|"paused" } -> Chatbot
 //   PATCH  /chatbots/:id  { name, description }   -> Chatbot
 //   DELETE /chatbots/:id                        -> void (also its channels and chat log)

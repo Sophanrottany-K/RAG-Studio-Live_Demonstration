@@ -20,6 +20,7 @@ import { KnowledgeTab } from "../components/knowledge/KnowledgeTab";
 import { ConfirmDialog } from "../components/create/ConfirmDialog";
 import { Banner, Button, Spinner } from "../components/create/ui";
 import { Sidebar4 } from "../components/shared/Sidebar4";
+import { showToast } from "../components/shared/Toaster";
 import { useGo } from "../lib/nav";
 import { useChatbot } from "../lib/useChatbot";
 import { api, errorMessage, isAbort } from "../services/api";
@@ -69,6 +70,19 @@ export default function Screen45Bot() {
       setBusy(false);
     }
   };
+
+  // Publishing also creates the public link, so the channels are read again to show it.
+  const publish = () =>
+    act(async () => {
+      const published = await api.publishChatbot(id);
+      const next = await api.getChannels(id).catch(() => null);
+      if (next) setChannels(next);
+      showToast({
+        tone: "success",
+        text: next?.publicLink.enabled ? "Chatbot published. Its public link is ready." : "Chatbot published.",
+      });
+      return published;
+    });
 
   const saveDetails = async (values: { name: string; description: string }) => {
     setBusy(true);
@@ -123,7 +137,7 @@ export default function Screen45Bot() {
                 bot={bot}
                 channels={channels}
                 busy={busy}
-                onPublish={() => act(() => api.publishChatbot(bot.id))}
+                onPublish={publish}
                 onPause={() => setConfirmPause(true)}
                 onResume={() => act(() => api.setChatbotStatus(bot.id, "active"))}
                 onPlayground={go(`/pg?bot=${bot.id}`)}

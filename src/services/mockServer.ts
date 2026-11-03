@@ -698,14 +698,24 @@ function updateChatbot(chatbotId: string, change: (bot: StoredChatbot, current: 
   return toChatbot(bot);
 }
 
-const publishChatbot = (chatbotId: string) =>
-  updateChatbot(chatbotId, (bot, current) => {
+function publishChatbot(chatbotId: string) {
+  const published = updateChatbot(chatbotId, (bot, current) => {
     if (current.status === "draft")
       throw new ApiError("Wait until every document is ready, then publish.", 409, "documents_processing");
     if (current.status !== "pending")
       throw new ApiError("This chatbot is already published.", 409, "already_published");
     bot.published = "active";
   });
+  // A published chatbot has one public link. One set up earlier stays as it is, including its URL and on/off state.
+  const { publicLink } = withChannels(chatbotId);
+  if (publicLink.configured) return published;
+  savePublicLink(chatbotId, {
+    title: published.name.slice(0, LINK_TITLE_MAX),
+    themeColor: publicLink.themeColor,
+    expiresAt: null,
+  });
+  return toChatbot(loadDb().chatbots.find((b) => b.id === chatbotId)!);
+}
 
 const setChatbotStatus = (chatbotId: string, status: unknown) =>
   updateChatbot(chatbotId, (bot) => {
