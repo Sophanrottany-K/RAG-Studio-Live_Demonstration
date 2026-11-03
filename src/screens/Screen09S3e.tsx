@@ -142,7 +142,7 @@ export default function Screen09S3e() {
         />
         <img className="w-16 h-16 shrink-0" src="icons/icon-tile-4.svg" alt="" />
         <div className="font-gabarito font-bold text-[24px] leading-[28px] text-ink-primary">
-          {dragOver ? "Drop to upload" : "Drag and drop files here"}
+          {dragOver ? "Drop to upload" : "Upload documents"}
         </div>
         <div className="text-center font-gabarito text-[16px] leading-[24px] text-ink-secondary">
           {full ? (
