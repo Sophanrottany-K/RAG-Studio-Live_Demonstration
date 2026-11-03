@@ -500,7 +500,7 @@ function defaultChannels(chatbotId: string, name: string): ChatbotChannels {
     widget: {
       configured: false,
       enabled: false,
-      primaryColor: "#111111",
+      primaryColor: "#111827",
       position: "bottom-right",
       welcomeMessage: "Hi! Ask me anything about our help center.",
       allowedDomains: [],

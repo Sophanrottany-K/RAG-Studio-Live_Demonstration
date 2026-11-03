@@ -3,7 +3,7 @@
 // then the embed code, which only appears once "Save and generate widget code" has been clicked.
 // Flow follows web-widget-workflow.png: an enabled widget shows the install steps, a disabled one says so.
 import { useState } from "react";
-import { ArrowUp, ChevronDown, FileText, Lock, MessageCircleMore, Mic, X } from "lucide-react";
+import { ArrowUp, ChevronDown, FileText, Lock, Mic, X } from "lucide-react";
 import { api, errorMessage } from "../../services/api";
 import { ALLOWED_DOMAINS_MAX, isHexColor, isLightColor, normalizeDomain } from "../../services/limits";
 import type { ChatbotChannels, WidgetChannel } from "../../services/types";
@@ -13,11 +13,10 @@ import { Notice, SectionLabel, buttonStyles, codeBlockStyles, cx, fieldStyles, l
 const PREVIEW_DOMAIN = "shop.example.com";
 
 const WIDGET_COLORS = [
-  { name: "Blue", hex: "#2563eb" },
-  { name: "Green", hex: "#16a34a" },
-  { name: "Yellow", hex: "#eab308" },
-  { name: "Purple", hex: "#7c3aed" },
-  { name: "Black", hex: "#111111" },
+  { name: "Violet", hex: "#8b5cf6" },
+  { name: "Blue", hex: "#3b82f6" },
+  { name: "Cyan", hex: "#06b6d4" },
+  { name: "Dark gray", hex: "#111827" },
 ];
 
 const INSTALL_STEPS = [
@@ -346,7 +345,16 @@ function WidgetPreview({
           )}
           style={brand}
         >
-          {open ? <X className="size-5" /> : <MessageCircleMore className="size-5" />}
+          {open ? (
+            <X className="size-5" />
+          ) : (
+            <img
+              src="icons/widget-logo.png"
+              alt=""
+              className="size-8"
+              style={{ filter: isLightColor(color) ? "brightness(0)" : undefined }}
+            />
+          )}
         </button>
       </div>
       <p className="text-c1 text-ink-secondary mt-2 flex items-center gap-2">
