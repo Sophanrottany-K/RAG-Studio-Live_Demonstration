@@ -5,22 +5,20 @@
 import { useState } from "react";
 import { ArrowUp, ChevronDown, FileText, Lock, MessageCircleMore, Mic, X } from "lucide-react";
 import { api, errorMessage } from "../../services/api";
-import { ALLOWED_DOMAINS_MAX, isHexColor, normalizeDomain } from "../../services/limits";
+import { ALLOWED_DOMAINS_MAX, isHexColor, isLightColor, normalizeDomain } from "../../services/limits";
 import type { ChatbotChannels, WidgetChannel } from "../../services/types";
 import { ChannelCard, formatDateTime } from "./parts";
-import {
-  ColorSetting,
-  Notice,
-  SectionLabel,
-  buttonStyles,
-  codeBlockStyles,
-  cx,
-  fieldStyles,
-  labelStyles,
-  useFeedback,
-} from "./ui";
+import { Notice, SectionLabel, buttonStyles, codeBlockStyles, cx, fieldStyles, labelStyles, useFeedback } from "./ui";
 
 const PREVIEW_DOMAIN = "shop.example.com";
+
+const WIDGET_COLORS = [
+  { name: "Blue", hex: "#2563eb" },
+  { name: "Green", hex: "#16a34a" },
+  { name: "Yellow", hex: "#eab308" },
+  { name: "Purple", hex: "#7c3aed" },
+  { name: "Black", hex: "#111111" },
+];
 
 const INSTALL_STEPS = [
   {
@@ -65,12 +63,6 @@ export function consoleSnippet(embedCode: string) {
     `(function(d){var s=d.createElement("script");s.src=${JSON.stringify(script.src)};s.async=true;` +
     `var a=${JSON.stringify(attrs)};for(var k in a)s.setAttribute(k,a[k]);d.body.appendChild(s);})(document);`
   );
-}
-
-/** Black text on light colors, white on dark ones. */
-function isLightColor(hex: string) {
-  const n = parseInt(hex.slice(1), 16);
-  return (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255 > 0.6;
 }
 
 export function WidgetCard({
@@ -183,8 +175,7 @@ export function WidgetCard({
         <div className="grid grid-cols-3 gap-8">
           <div className="col-span-2 min-w-0">
             <SectionLabel>{"Widget settings"}</SectionLabel>
-            <ColorSetting
-              label="Primary color"
+            <ColorChoice
               value={color}
               onChange={(hex) => {
                 setColor(hex);
@@ -299,6 +290,33 @@ export function WidgetCard({
         </div>
       </div>
     </ChannelCard>
+  );
+}
+
+/** The widget's colors as a row of circles; the names are for screen readers only. */
+function ColorChoice({ value, onChange }: { value: string; onChange: (hex: string) => void }) {
+  return (
+    <fieldset>
+      <legend className={labelStyles}>{"Primary color"}</legend>
+      <div className="flex items-center gap-3">
+        {WIDGET_COLORS.map(({ name, hex }) => (
+          <label key={hex} className="cursor-pointer">
+            <input
+              type="radio"
+              name="widget-color"
+              aria-label={name}
+              checked={value.toLowerCase() === hex}
+              onChange={() => onChange(hex)}
+              className="peer sr-only"
+            />
+            <span
+              className="ring-offset-card peer-checked:ring-ink peer-focus-visible:ring-accent block size-8 rounded-full ring-2 ring-transparent ring-offset-2"
+              style={{ background: hex }}
+            />
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 

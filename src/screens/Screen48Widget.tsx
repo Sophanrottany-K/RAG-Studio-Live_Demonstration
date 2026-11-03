@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { Lock, MessageCircleMore, X } from "lucide-react";
 import { ChatThread } from "../components/chat/ChatThread";
 import { api, isAbort, usingMockApi, watchChanges } from "../services/api";
+import { isLightColor } from "../services/limits";
 import { connectSiteStorage, isCrossSiteFrame } from "../services/siteStorage";
 import { ApiError, type WidgetChat, type WidgetEmbed } from "../services/types";
 
@@ -122,7 +123,10 @@ export default function Screen48Widget() {
             } else setHidden(HIDDEN.no_storage_access(host));
           }}
           className="size-14 shrink-0 rounded-full flex items-center justify-center cursor-pointer shadow-[0px_4px_12px_0px_#00000033] transition-transform hover:scale-105"
-          style={{ background: embed.primaryColor ?? "#111111", color: "#FFFFFF" }}
+          style={{
+            background: embed.primaryColor ?? "#111111",
+            color: isLightColor(embed.primaryColor ?? "#111111") ? "#111111" : "#FFFFFF",
+          }}
         >
           <MessageCircleMore className="size-6" />
         </button>
@@ -133,6 +137,7 @@ export default function Screen48Widget() {
   if (!chat || hidden) return null;
 
   const color = chat.primaryColor;
+  const onColor = isLightColor(color) ? "#111111" : "#FFFFFF";
   const left = chat.position === "bottom-left";
   const unavailable = chat.reason === "paused" || chat.reason === "not_published" ? UNAVAILABLE[chat.reason] : null;
   const initial = chat.chatbotName.trim().charAt(0).toUpperCase() || "C";
@@ -148,7 +153,7 @@ export default function Screen48Widget() {
           <div className="shrink-0 flex items-center gap-3 border-b border-[#E4E4E0] px-4 py-3">
             <div
               className="size-10 shrink-0 rounded-[12px] flex items-center justify-center font-bold text-[18px]"
-              style={{ background: `${color}1F`, color }}
+              style={{ background: `${color}1F`, color: onColor === "#111111" ? onColor : color }}
             >
               {initial}
             </div>
@@ -210,7 +215,7 @@ export default function Screen48Widget() {
         aria-label={open ? "Close chat" : `Chat with ${chat.chatbotName}`}
         onClick={() => setOpen((o) => !o)}
         className="size-14 shrink-0 rounded-full flex items-center justify-center cursor-pointer shadow-[0px_4px_12px_0px_#00000033] transition-transform hover:scale-105"
-        style={{ background: color, color: "#FFFFFF" }}
+        style={{ background: color, color: onColor }}
       >
         {open ? <X className="size-6" /> : <MessageCircleMore className="size-6" />}
       </button>

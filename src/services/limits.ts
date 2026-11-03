@@ -45,6 +45,12 @@ export const ALLOWED_DOMAINS_MAX = 20;
 
 export const isHexColor = (value: string) => /^#[0-9a-f]{6}$/i.test(value);
 
+/** Whether text on this color should be black rather than white. */
+export function isLightColor(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  return (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255 > 0.6;
+}
+
 /** "https://Shop.Example.com/path" -> "shop.example.com"; wildcards like *.example.com are allowed. Null when invalid. */
 export function normalizeDomain(text: string) {
   const host = text

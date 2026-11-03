@@ -1,6 +1,7 @@
 // Chat conversation shared by the Playground (owner testing) and the guest public link.
 import { useEffect, useRef, useState } from "react";
 import { errorMessage, isAbort } from "../../services/api";
+import { isLightColor } from "../../services/limits";
 import type { ChatAnswer, ChatMessage, ChatSource } from "../../services/types";
 import { Spinner } from "../create/ui";
 
@@ -98,7 +99,7 @@ export function ChatThread({
                 <div key={m.id} className="self-stretch flex justify-end">
                   <div
                     className="max-w-[75%] rounded-tl-[16px] rounded-tr-[16px] rounded-br-[4px] rounded-bl-[16px] px-4 py-3 font-gabarito text-[15px] leading-[24px] text-white whitespace-pre-wrap break-words"
-                    style={{ background: accent }}
+                    style={{ background: accent, color: isLightColor(accent) ? "#111111" : "#FFFFFF" }}
                   >
                     {m.text}
                   </div>
@@ -204,7 +205,7 @@ export function ChatThread({
             aria-label="Send question"
             disabled={!text.trim() || thinking}
             className="w-11 h-11 shrink-0 rounded-full flex justify-center items-center text-white text-[20px] leading-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-            style={{ background: accent }}
+            style={{ background: accent, color: isLightColor(accent) ? "#111111" : "#FFFFFF" }}
           >
             ↑
           </button>
