@@ -3,7 +3,7 @@
 // then the embed code, which only appears once "Save and generate widget code" has been clicked.
 // Flow follows web-widget-workflow.png: an enabled widget shows the install steps, a disabled one says so.
 import { useState } from "react";
-import { ArrowUp, ChevronDown, FileText, Lock, MessageCircleMore, Mic, X } from "lucide-react";
+import { ArrowUp, ChevronDown, FileText, Lock, MessageSquare, Mic, X } from "lucide-react";
 import { api, errorMessage } from "../../services/api";
 import { ALLOWED_DOMAINS_MAX, isHexColor, isLightColor, normalizeDomain } from "../../services/limits";
 import type { ChatbotChannels, WidgetChannel } from "../../services/types";
@@ -346,7 +346,7 @@ function WidgetPreview({
           )}
           style={brand}
         >
-          {open ? <X className="size-5" /> : <MessageCircleMore className="size-5" />}
+          {open ? <X className="size-5" /> : <MessageSquare className="size-5" />}
         </button>
       </div>
       <p className="text-c1 text-ink-secondary mt-2 flex items-center gap-2">
