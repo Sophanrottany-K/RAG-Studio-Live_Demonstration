@@ -18,6 +18,7 @@ const LENGTHS = ["Concise", "Detailed"] as const;
 const FORMATS = ["Rich text", "Plain text only"] as const;
 const LANGUAGES = ["Auto-detect", "English", "Khmer", "Korean"];
 const VISIBILITY = ["Full document", "Name only", "Hidden"] as const;
+export const WIZARD_VISIBILITY = ["Full document", "Name only"] as const;
 const SEARCH_MODES: { value: SearchMode; label: string }[] = [
   { value: "Hybrid", label: "Hybrid (keyword + meaning)" },
   { value: "Semantic", label: "Meaning only" },
@@ -150,14 +151,14 @@ export function BehaviorFields({
   settings,
   onChange,
   instructionsError,
-  hideSourceVisibility,
+  visibilityOptions = VISIBILITY,
 }: {
   settings: BehaviorSettings;
   onChange: (change: Partial<BehaviorSettings>) => void;
   /** Shown under the system instructions; null when there is nothing to report yet. */
   instructionsError: string | null;
-  /** The create wizard leaves this out; the Configuration tab still offers it. */
-  hideSourceVisibility?: boolean;
+  /** The create wizard leaves out "Hidden"; the Configuration tab still offers all three. */
+  visibilityOptions?: readonly ChatbotSettings["sourceVisibility"][];
 }) {
   return (
     <>
@@ -219,16 +220,14 @@ export function BehaviorFields({
             onChange={(language) => onChange({ language })}
           />
         </FormField>
-        {!hideSourceVisibility && (
-          <FormField label="Source visibility" hint="How much of a cited source a guest may open.">
-            <Segmented
-              label="Source visibility"
-              options={VISIBILITY}
-              value={settings.sourceVisibility}
-              onChange={(sourceVisibility) => onChange({ sourceVisibility })}
-            />
-          </FormField>
-        )}
+        <FormField label="Source visibility" hint="How much of a cited source a guest may open.">
+          <Segmented
+            label="Source visibility"
+            options={visibilityOptions}
+            value={settings.sourceVisibility}
+            onChange={(sourceVisibility) => onChange({ sourceVisibility })}
+          />
+        </FormField>
       </FieldSection>
     </>
   );

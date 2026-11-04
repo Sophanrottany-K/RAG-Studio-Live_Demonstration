@@ -16,6 +16,7 @@ import {
   StarterQuestionsField,
   Step2Aside,
   Step2Stepper,
+  WIZARD_VISIBILITY,
   modelOptions,
 } from "../components/create/step2";
 import { Banner } from "../components/create/ui";
@@ -141,7 +142,7 @@ export default function Screen07S2() {
                   settings={settings}
                   onChange={updateSettings}
                   instructionsError={submitted ? instructionsError : null}
-                  hideSourceVisibility
+                  visibilityOptions={WIZARD_VISIBILITY}
                 />
 
                 <StarterQuestionsField
