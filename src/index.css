@@ -244,3 +244,60 @@ html[data-sidebar="collapsed"] {
 .tabular {
   font-variant-numeric: tabular-nums;
 }
+
+/* Chat answers: each new word fades in while the answer streams. */
+.stream-word {
+  animation: stream-word 350ms ease-out both;
+}
+
+/* Three dots shown while a chat answer is still being generated. */
+.typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #8a8a8a;
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stream-word,
+  .typing-dots span {
+    animation: none;
+  }
+}
+
+@keyframes stream-word {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

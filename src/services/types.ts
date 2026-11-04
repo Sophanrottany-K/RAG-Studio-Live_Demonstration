@@ -155,6 +155,8 @@ export type WidgetEmbed = SaveWidgetRequest;
 /** Reply from POST /chatbots/:id/chat (playground) or POST /public/:token/chat (guest link). */
 export type ChatAnswer = {
   answer: string;
+  /** True when `answer` is Markdown to render (prepared answers); otherwise it is shown as plain text. */
+  markdown?: boolean;
   /** False when nothing in the knowledge base matched the question. */
   answered: boolean;
   sourcesSearched: number;

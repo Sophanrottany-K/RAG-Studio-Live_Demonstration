@@ -3,9 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { errorMessage, isAbort } from "../../services/api";
 import { isLightColor } from "../../services/limits";
 import type { ChatAnswer, ChatMessage, ChatSource } from "../../services/types";
-import { Spinner } from "../create/ui";
+import { MarkdownAnswer, fadingWords } from "./MarkdownAnswer";
 
 const QUESTION_MAX = 2000;
+// Answers arrive in uneven bursts of 1–3 words, like tokens from a model. The mock server sends them whole.
+const STREAM_MIN_DELAY_MS = 25;
+const STREAM_DELAY_RANGE_MS = 50;
+/** A long answer speeds up so that it never takes much longer than this. */
+const STREAM_MAX_MS = 8000;
 const newId = () => Math.random().toString(36).slice(2, 10);
 
 export function ChatThread({
@@ -39,17 +44,69 @@ export function ChatThread({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState("");
   const [thinking, setThinking] = useState(false);
+  /** The answer still being revealed, and how many characters of it are showing. */
+  const [stream, setStream] = useState<{ id: string; text: string; length: number } | null>(null);
+  /** True when there is more of the conversation below what is on screen. */
+  const [awayFromBottom, setAwayFromBottom] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const controller = useRef<AbortController | null>(null);
+  const streamId = stream?.id;
+  const busy = thinking || !!stream;
+
+  const questionCount = messages.filter((m) => m.role === "user").length;
+
+  const scrollToEnd = () => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  const measure = () => {
+    const el = scrollRef.current;
+    if (el) setAwayFromBottom(el.scrollHeight - el.scrollTop - el.clientHeight > 40);
+  };
 
   useEffect(() => () => controller.current?.abort(), []);
+  // Only a new question scrolls the view. The answer then grows on its own, without moving the page.
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, thinking]);
+    if (questionCount) scrollToEnd();
+  }, [questionCount]);
+  // Growing text fires no scroll event, so check again whenever the content changes.
+  useEffect(measure, [messages, thinking, stream?.length]);
+  useEffect(() => {
+    if (!streamId || !stream) return;
+    const { text } = stream;
+    const pace = Math.min(1, STREAM_MAX_MS / (text.split(/\s+/).length * 25));
+    let length = 0;
+    let timer: number;
+    const nextBurst = () => {
+      const words = 1 + Math.floor(Math.random() * 3);
+      const burst = text.slice(length).match(new RegExp(`^(?:\\s*\\S+){1,${words}}`))?.[0];
+      if (!burst || length + burst.length >= text.length) {
+        setStream(null);
+        return;
+      }
+      length += burst.length;
+      const shown = length;
+      setStream((s) => s && { ...s, length: shown });
+      // A little longer at the end of a sentence.
+      const delay = (STREAM_MIN_DELAY_MS + Math.random() * STREAM_DELAY_RANGE_MS) * (/[.!?:]$/.test(burst) ? 2 : 1);
+      timer = window.setTimeout(nextBurst, delay * pace);
+    };
+    timer = window.setTimeout(nextBurst, STREAM_MIN_DELAY_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streamId]);
+
+  /** Stops the answer where it is, keeping the words already shown. */
+  const stop = () => {
+    controller.current?.abort();
+    if (!stream) return;
+    const shown = stream.text.slice(0, stream.length);
+    setMessages((list) =>
+      list.map((m) => (m.id === stream.id && m.role === "bot" ? { ...m, answer: { ...m.answer, answer: shown } } : m)),
+    );
+    setStream(null);
+  };
 
   const send = async (raw: string, retryOf?: string) => {
     const question = raw.trim();
-    if (!question || thinking) return;
+    if (!question || busy) return;
     setText("");
     setMessages((list) => [
       ...list.filter((m) => m.id !== retryOf),
@@ -59,7 +116,10 @@ export function ChatThread({
     controller.current = new AbortController();
     try {
       const answer = await ask(question, controller.current.signal);
-      setMessages((list) => [...list, { id: newId(), role: "bot", answer }]);
+      const id = newId();
+      setMessages((list) => [...list, { id, role: "bot", answer }]);
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+        setStream({ id, text: answer.answer, length: 0 });
     } catch (e) {
       if (isAbort(e) || onError?.(e)) return;
       setMessages((list) => [...list, { id: newId(), role: "error", text: errorMessage(e), question }]);
@@ -72,7 +132,7 @@ export function ChatThread({
 
   return (
     <div className="self-stretch flex-1 min-h-0 flex flex-col">
-      <div ref={scrollRef} className="self-stretch flex-1 min-h-0 overflow-y-auto">
+      <div ref={scrollRef} onScroll={measure} className="self-stretch flex-1 min-h-0 overflow-y-auto">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col justify-center items-center gap-3 p-7 text-center">
             <div className="font-gabarito font-bold text-[24px] leading-normal text-[#111111]">{emptyTitle}</div>
@@ -111,15 +171,21 @@ export function ChatThread({
                       {initial}
                     </div>
                     <div className="font-jet-brains-mono font-medium text-[11px] leading-[16px] tracking-[0.06em] uppercase text-ink-muted-2">
-                      {`Searched ${m.answer.sourcesSearched} source${m.answer.sourcesSearched === 1 ? "" : "s"} · ${
-                        m.answer.answered ? "Answer found" : "No answer found"
-                      }`}
+                      {m.answer.answered
+                        ? `Retrieved ${m.answer.sources.length} source${m.answer.sources.length === 1 ? "" : "s"} · Answer found`
+                        : `Searched ${m.answer.sourcesSearched} source${m.answer.sourcesSearched === 1 ? "" : "s"} · No answer found`}
                     </div>
                   </div>
-                  <div className="max-w-[85%] font-gabarito text-[15px] leading-[24px] text-ink-body-2 whitespace-pre-wrap [overflow-wrap:anywhere]">
-                    {m.answer.answer}
-                  </div>
-                  {sources !== "hidden" && m.answer.sources.length > 0 && (
+                  {m.answer.markdown ? (
+                    <MarkdownAnswer
+                      markdown={stream?.id === m.id ? m.answer.answer.slice(0, stream.length) : m.answer.answer}
+                    />
+                  ) : (
+                    <div className="max-w-[85%] font-gabarito text-[15px] leading-[24px] text-ink-body-2 whitespace-pre-wrap [overflow-wrap:anywhere]">
+                      {fadingWords(stream?.id === m.id ? m.answer.answer.slice(0, stream.length) : m.answer.answer)}
+                    </div>
+                  )}
+                  {stream?.id !== m.id && sources !== "hidden" && m.answer.sources.length > 0 && (
                     <div className="max-w-[85%] flex flex-col items-start gap-2">
                       <div className="font-gabarito font-medium text-[13px] text-ink-secondary">
                         {`Retrieved sources (${m.answer.sources.length})`}
@@ -172,21 +238,32 @@ export function ChatThread({
                 </div>
               ),
             )}
-            {thinking && (
-              <div className="flex items-center gap-2.5 font-gabarito text-[14px] text-ink-secondary">
-                <Spinner /> {`${botName} is searching its documents…`}
+            {busy && (
+              <div role="status" aria-label={`${botName} is responding`} className="h-6 flex items-center">
+                <TypingDots />
               </div>
             )}
           </div>
         )}
       </div>
       <form
-        className="self-stretch shrink-0 border-t border-border-default bg-bg-card flex flex-col items-center gap-2 px-5 pt-4 pb-4"
+        className="relative self-stretch shrink-0 border-t border-border-default bg-bg-card flex flex-col items-center gap-2 px-5 pt-4 pb-4"
         onSubmit={(e) => {
           e.preventDefault();
           send(text);
         }}
       >
+        {messages.length > 0 && awayFromBottom && (
+          <button
+            type="button"
+            aria-label={busy ? "Still responding. Scroll to the latest text" : "Scroll to the latest message"}
+            onClick={scrollToEnd}
+            className="absolute -top-12 left-1/2 -translate-x-1/2 min-w-9 h-9 px-2.5 rounded-full bg-[#FFFFFF] border border-[#E4E4E0] shadow-[0px_1px_6px_0px_#1111111A] flex justify-center items-center text-[16px] leading-none text-[#444444] hover:bg-bg-soft cursor-pointer"
+          >
+            {/* Three dots while the answer is still coming below; the arrow once it is done. */}
+            {busy ? <TypingDots /> : "↓"}
+          </button>
+        )}
         <div className="w-full max-w-[1000px] bg-bg-card border border-border-default rounded-[28px] shadow-[0px_5px_20px_0px_#1111111A,0px_1px_6px_0px_#1111110A] flex items-end gap-3 pl-6 pr-2 py-2">
           <textarea
             aria-label="Your question"
@@ -203,19 +280,46 @@ export function ChatThread({
             }}
             className="flex-1 min-w-0 max-h-32 self-center resize-none bg-transparent border-0 py-2 font-gabarito text-[16px] leading-[24px] text-ink-primary placeholder:text-ink-muted focus:outline-none"
           />
-          <button
-            type="submit"
-            aria-label="Send question"
-            disabled={!text.trim() || thinking}
-            className="w-11 h-11 shrink-0 rounded-full flex justify-center items-center text-white text-[20px] leading-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-            style={{ background: accent, color: isLightColor(accent) ? "#111111" : "#FFFFFF" }}
-          >
-            ↑
-          </button>
+          {busy ? (
+            <button
+              key="stop"
+              type="button"
+              aria-label="Stop the answer"
+              onClick={stop}
+              className="w-11 h-11 shrink-0 rounded-full flex justify-center items-center cursor-pointer"
+              style={{ background: accent }}
+            >
+              <span
+                className="w-3.5 h-3.5 rounded-[3px]"
+                style={{ background: isLightColor(accent) ? "#111111" : "#FFFFFF" }}
+              />
+            </button>
+          ) : (
+            <button
+              key="send"
+              type="submit"
+              aria-label="Send question"
+              disabled={!text.trim()}
+              className="w-11 h-11 shrink-0 rounded-full flex justify-center items-center text-white text-[20px] leading-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{ background: accent, color: isLightColor(accent) ? "#111111" : "#FFFFFF" }}
+            >
+              ↑
+            </button>
+          )}
         </div>
         {footer}
       </form>
     </div>
+  );
+}
+
+function TypingDots() {
+  return (
+    <span className="typing-dots" aria-hidden>
+      <span />
+      <span />
+      <span />
+    </span>
   );
 }
 

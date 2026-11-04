@@ -49,6 +49,7 @@ import { PROPERTY_DOCUMENTS, loadPropertySeedFile } from "./propertyDocuments";
 import { fileStore } from "./documentStore";
 import { TEXT_VERSION, extractText } from "./extractText";
 import { computeAnalytics, computeUnanswered, type ChatEvent } from "./mockAnalytics";
+import { markdownToPlainText, preparedAnswer } from "./preparedAnswers";
 import { siteStorage } from "./siteStorage";
 
 const DB_KEY = "rag-studio-mock-db";
@@ -947,6 +948,34 @@ async function answerFor(bot: Chatbot, question: unknown): Promise<ChatAnswer> {
       passages: chunk(text).map((p) => ({ text: p, words: termList(p), heading: terms(p.slice(0, 40)) })),
     });
   }
+  const prepared = preparedAnswer(question);
+  if (prepared) {
+    // Only a chatbot about KOSIGN gives these answers; any other falls through to its own documents.
+    const cited = library.flatMap(({ doc, passages }) => {
+      const passage = passages.find((p) => /kosign/i.test(p.text))?.text;
+      return passage || /kosign/i.test(doc.name) ? [{ doc, passage }] : [];
+    });
+    const aboutKosign = /kosign/i.test([bot.name, bot.description, ...bot.settings.starterQuestions].join(" "));
+    if (cited.length || aboutKosign) {
+      const rich = bot.settings.formatting === "Rich text";
+      const shown = cited.length
+        ? cited
+        : library.slice(0, 1).map(({ doc, passages }) => ({ doc, passage: passages[0]?.text }));
+      return {
+        answered: true,
+        markdown: rich,
+        sourcesSearched: ready.length,
+        sources: shown.slice(0, 3).map(({ doc, passage }) => ({
+          documentId: doc.id,
+          name: doc.name,
+          type: doc.kind === "url" ? "URL" : doc.type,
+          snippet: trim(passage || `“${doc.name}” covers this topic.`, 220),
+        })),
+        answer: rich ? prepared : markdownToPlainText(prepared),
+      };
+    }
+  }
+
   // Rare words tell more than common ones: in a scholarship guide "scholarship" is everywhere, "eligible" is not.
   const all = library.flatMap((l) => l.passages);
   const weight = new Map(
@@ -1072,7 +1101,7 @@ function logChat(chatbotId: string, channel: AnalyticsChannel, visitor: string, 
     question: typeof question === "string" ? question.slice(0, 300) : "",
     answered: answer.answered,
     sources: answer.sources.length,
-    reply: answer.answer.slice(0, 300),
+    reply: (answer.markdown ? markdownToPlainText(answer.answer) : answer.answer).slice(0, 300),
   });
   db.events = db.events.slice(-CHAT_LOG_MAX);
   saveDb(db);
