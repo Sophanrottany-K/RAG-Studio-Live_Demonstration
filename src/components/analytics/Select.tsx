@@ -1,7 +1,12 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 
-export type SelectOption = { value: string; label: string };
+export type SelectOption = {
+  value: string;
+  label: string;
+  /** Small grey text beside the label in the list, shown only while the option is hovered or reached by keyboard. */
+  hint?: string;
+};
 
 /**
  * Dropdown with a styled list, as in the RAG Studio web app (components/ui/select.tsx).
@@ -41,6 +46,8 @@ export function Select({
 
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  // The list opens with the chosen option active, so its hint waits until the user moves to an option.
+  const [showHint, setShowHint] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -67,6 +74,7 @@ export function Select({
 
   const openList = () => {
     setActiveIndex(Math.max(0, selectedIndex));
+    setShowHint(false);
     setOpen(true);
   };
   const close = () => {
@@ -82,6 +90,7 @@ export function Select({
 
   const onListKeyDown = (e: React.KeyboardEvent) => {
     const last = options.length - 1;
+    setShowHint(true);
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
@@ -159,6 +168,7 @@ export function Select({
           aria-labelledby={labelId}
           aria-activedescendant={optionId(activeIndex)}
           onKeyDown={onListKeyDown}
+          onMouseLeave={() => setShowHint(false)}
           className="bg-card border-line shadow-elevated rounded-small absolute top-full left-0 z-20 mt-2 max-h-72 w-full overflow-y-auto border p-1.5 outline-none"
         >
           {options.map((option, index) => {
@@ -170,12 +180,24 @@ export function Select({
                 role="option"
                 aria-selected={isSelected}
                 onClick={() => choose(index)}
-                onMouseEnter={() => setActiveIndex(index)}
+                onMouseEnter={() => {
+                  setActiveIndex(index);
+                  setShowHint(true);
+                }}
                 className={`rounded-tag text-p3 flex cursor-pointer items-center gap-2 px-3 py-2.5 ${
                   index === activeIndex ? "bg-subtle" : ""
                 } ${isSelected ? "text-ink font-medium" : "text-ink-body"}`}
               >
-                <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                <span className={`min-w-0 truncate ${option.hint ? "w-64 shrink-0" : "flex-1"}`}>{option.label}</span>
+                {option.hint && (
+                  <span
+                    className={`text-c1 text-ink-muted min-w-0 flex-1 truncate font-normal ${
+                      showHint && index === activeIndex ? "" : "invisible"
+                    }`}
+                  >
+                    {option.hint}
+                  </span>
+                )}
                 {isSelected && <Check className="text-accent size-4 shrink-0" aria-hidden />}
               </li>
             );

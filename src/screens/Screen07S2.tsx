@@ -17,7 +17,7 @@ import {
   Step2Aside,
   Step2Stepper,
   WIZARD_VISIBILITY,
-  modelOptions,
+  modelOptionsWithHints,
 } from "../components/create/step2";
 import { Banner } from "../components/create/ui";
 import { Sidebar2 } from "../components/shared/Sidebar2";
@@ -118,7 +118,7 @@ export default function Screen07S2() {
                       label="Chat model"
                       disabled={!catalog}
                       placeholder={modelPlaceholder}
-                      options={modelOptions(catalog?.chat)}
+                      options={modelOptionsWithHints(catalog?.chat)}
                       value={settings.chatModel}
                       onChange={(chatModel) => updateSettings({ chatModel })}
                     />
@@ -128,7 +128,7 @@ export default function Screen07S2() {
                       label="Embedding model"
                       disabled={!catalog}
                       placeholder={modelPlaceholder}
-                      options={modelOptions(catalog?.embedding)}
+                      options={modelOptionsWithHints(catalog?.embedding)}
                       value={settings.embeddingModel}
                       onChange={(embeddingModel) => updateSettings({ embeddingModel })}
                     />

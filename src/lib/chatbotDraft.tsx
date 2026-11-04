@@ -39,7 +39,7 @@ const emptyDraft = (): Draft => ({
   name: "",
   description: "",
   settings: {
-    chatModel: "qwen3:8b",
+    chatModel: "gemma4:12b",
     embeddingModel: "bge-m3",
     instructions: DEFAULT_INSTRUCTIONS,
     tone: "Professional",
@@ -61,7 +61,7 @@ const emptyDraft = (): Draft => ({
   reachedStep: 1,
 });
 
-const STORAGE_KEY = "rag-studio-chatbot-draft";
+const STORAGE_KEY = "rag-studio-chatbot-draft-v2";
 
 function loadDraft(): Draft {
   try {
@@ -75,6 +75,8 @@ function loadDraft(): Draft {
       settings: {
         ...base.settings,
         ...saved.settings,
+        // Every visit saves a draft, so a saved chat model isn't a choice to keep: each page load starts on the default.
+        chatModel: base.settings.chatModel,
         advanced: { ...base.settings.advanced, ...saved.settings?.advanced },
       },
       // Transfers in flight when the page closed can't resume.

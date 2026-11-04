@@ -57,29 +57,31 @@ const DB_KEY = "rag-studio-mock-db";
 const MODELS: ModelCatalog = {
   chat: [
     {
+      id: "gemma4:12b",
+      label: "gemma4:12b",
+      provider: "Ollama · self-hosted",
+      description: "analyzing information and solving complex questions.",
+      isDefault: true,
+    },
+    {
       id: "qwen3:8b",
       label: "qwen3:8b",
       provider: "Ollama · self-hosted",
-      description: "Fast, multilingual, good default",
-      isDefault: true,
+      description: "multilingual communication and problem-solving.",
+   
     },
     {
       id: "llama3.1:8b",
       label: "llama3.1:8b",
       provider: "Ollama · self-hosted",
-      description: "Strong English reasoning",
-    },
-    {
-      id: "gemma3:12b",
-      label: "gemma3:12b",
-      provider: "Ollama · self-hosted",
-      description: "Longer, more detailed answers",
+      description: "everyday conversations and customer support.",
+      
     },
     {
       id: "mistral-nemo:12b",
       label: "mistral-nemo:12b",
       provider: "Ollama · self-hosted",
-      description: "128K context window",
+      description: "understanding long documents and writing clear responses.",
     },
   ],
   embedding: [
@@ -87,14 +89,14 @@ const MODELS: ModelCatalog = {
       id: "bge-m3",
       label: "bge-m3 (multilingual)",
       provider: "Ollama · self-hosted",
-      description: "100+ languages incl. Khmer",
+      description: "Searching documents in 100+ languages, including Khmer, Korea, English",
       isDefault: true,
     },
     {
       id: "nomic-embed-text",
       label: "nomic-embed-text",
       provider: "Ollama · self-hosted",
-      description: "English, smaller index",
+      description: "English documents, with a smaller index",
     },
   ],
 };
@@ -112,6 +114,8 @@ type Db = {
   channels: Record<string, ChatbotChannels>;
   /** Chat log behind GET /analytics; the newest CHAT_LOG_MAX questions are kept. */
   events: ChatEvent[];
+  /** Set once the built-in chatbots saved in this browser have moved from qwen3:8b to gemma4:12b. */
+  builtInsOnGemma4?: boolean;
 };
 const CHAT_LOG_MAX = 5000;
 
@@ -156,7 +160,7 @@ function hrChatbot(): StoredChatbot {
     published: "active",
     channels: [],
     settings: {
-      chatModel: "qwen3:8b",
+      chatModel: "gemma4:12b",
       embeddingModel: "bge-m3",
       instructions:
         "You are the HR assistant for Northwind employees. Answer only from the HR policy documents, keep answers short and cite the policy.",
@@ -204,7 +208,7 @@ function propertyChatbot(): StoredChatbot {
     published: "active",
     channels: [],
     settings: {
-      chatModel: "qwen3:8b",
+      chatModel: "gemma4:12b",
       embeddingModel: "bge-m3",
       instructions:
         "You are the property assistant for Riverlane Homes. Answer only from the provided documents, keep answers short and cite the source.",
@@ -274,7 +278,7 @@ function demoChatbot(): StoredChatbot {
     published: "active",
     channels: [],
     settings: {
-      chatModel: "qwen3:8b",
+      chatModel: "gemma4:12b",
       embeddingModel: "bge-m3",
       instructions:
         "You are the billing support assistant. Answer only from the provided documents, keep answers short and cite the source.",
@@ -315,6 +319,14 @@ function loadDb(): Db {
   const property = db.chatbots.find((c) => c.id === PROPERTY_CHATBOT_ID);
   if (!property) db.chatbots.push(propertyChatbot());
   else property.documents = [...propertyStoredDocuments(), ...property.documents.filter((d) => !isDemoDocument(d.id))];
+  // Runs once, so a later choice of qwen3:8b on these chatbots is kept.
+  if (!db.builtInsOnGemma4) {
+    for (const bot of db.chatbots) {
+      const builtIn = bot.id === DEMO_CHATBOT_ID || bot.id === HR_CHATBOT_ID || bot.id === PROPERTY_CHATBOT_ID;
+      if (builtIn && bot.settings.chatModel === "qwen3:8b") bot.settings.chatModel = "gemma4:12b";
+    }
+    db.builtInsOnGemma4 = true;
+  }
   return db;
 }
 

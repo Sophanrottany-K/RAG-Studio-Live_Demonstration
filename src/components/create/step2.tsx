@@ -28,6 +28,10 @@ const SEARCH_MODES: { value: SearchMode; label: string }[] = [
 export const modelOptions = (models: ModelCatalog["chat"] = []) =>
   models.map((m) => ({ value: m.id, label: m.isDefault ? `${m.label} · default` : m.label }));
 
+/** The same options, with what each model is good at shown in small grey text when hovering it in the list. */
+export const modelOptionsWithHints = (models: ModelCatalog["chat"] = []) =>
+  modelOptions(models).map((option, index) => ({ ...option, hint: models[index].description }));
+
 /** Shared by the number and text inputs. */
 export const inputClass =
   "rounded-input border border-line bg-card text-p3 text-ink placeholder:text-ink-muted tabular h-12 w-full min-w-0 px-3 py-1 outline-none transition-[color,border-color,box-shadow] focus-visible:border-accent focus-visible:ring-accent/30 focus-visible:ring-[3px]";

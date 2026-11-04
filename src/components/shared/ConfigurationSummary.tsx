@@ -11,7 +11,7 @@ export function ConfigurationSummary() {
       <div className="self-stretch h-2 shrink-0 flex flex-col items-start" />
       <div className="self-stretch shrink-0 border-b border-border-default flex justify-between items-center py-[9px]">
         <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[20px] text-ink-secondary">{"Chat model"}</div>
-        <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">{"qwen3:8b"}</div>
+        <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">{"gemma4:12b"}</div>
       </div>
       <div className="self-stretch shrink-0 border-b border-border-default flex justify-between items-center py-[9px]">
         <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[20px] text-ink-secondary">{"Embedding model"}</div>
