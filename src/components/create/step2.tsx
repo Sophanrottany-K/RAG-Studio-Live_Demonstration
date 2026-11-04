@@ -150,11 +150,14 @@ export function BehaviorFields({
   settings,
   onChange,
   instructionsError,
+  hideSourceVisibility,
 }: {
   settings: BehaviorSettings;
   onChange: (change: Partial<BehaviorSettings>) => void;
   /** Shown under the system instructions; null when there is nothing to report yet. */
   instructionsError: string | null;
+  /** The create wizard leaves this out; the Configuration tab still offers it. */
+  hideSourceVisibility?: boolean;
 }) {
   return (
     <>
@@ -216,14 +219,16 @@ export function BehaviorFields({
             onChange={(language) => onChange({ language })}
           />
         </FormField>
-        <FormField label="Source visibility" hint="How much of a cited source a guest may open.">
-          <Segmented
-            label="Source visibility"
-            options={VISIBILITY}
-            value={settings.sourceVisibility}
-            onChange={(sourceVisibility) => onChange({ sourceVisibility })}
-          />
-        </FormField>
+        {!hideSourceVisibility && (
+          <FormField label="Source visibility" hint="How much of a cited source a guest may open.">
+            <Segmented
+              label="Source visibility"
+              options={VISIBILITY}
+              value={settings.sourceVisibility}
+              onChange={(sourceVisibility) => onChange({ sourceVisibility })}
+            />
+          </FormField>
+        )}
       </FieldSection>
     </>
   );

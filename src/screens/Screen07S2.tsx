@@ -141,6 +141,7 @@ export default function Screen07S2() {
                   settings={settings}
                   onChange={updateSettings}
                   instructionsError={submitted ? instructionsError : null}
+                  hideSourceVisibility
                 />
 
                 <StarterQuestionsField
