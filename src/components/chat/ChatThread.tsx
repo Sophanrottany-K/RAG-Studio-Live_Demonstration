@@ -1,5 +1,6 @@
 // Chat conversation shared by the Playground (owner testing) and the guest public link.
 import { useEffect, useRef, useState } from "react";
+import { FileCode, FileSpreadsheet, FileText, Globe, type LucideIcon } from "lucide-react";
 import { errorMessage, isAbort } from "../../services/api";
 import { isLightColor } from "../../services/limits";
 import type { ChatAnswer, ChatMessage, ChatSource } from "../../services/types";
@@ -323,7 +324,27 @@ function TypingDots() {
   );
 }
 
+const SOURCE_ICONS: Record<string, { Icon: LucideIcon; className: string; label: string }> = {
+  PDF: { Icon: FileText, className: "bg-[#FDECEC] text-[#D93025]", label: "PDF" },
+  DOCX: { Icon: FileText, className: "bg-[#E8F0FE] text-[#1A73E8]", label: "Word document" },
+  XLSX: { Icon: FileSpreadsheet, className: "bg-[#E6F4EA] text-[#188038]", label: "Excel spreadsheet" },
+  TXT: { Icon: FileText, className: "bg-[#F3F3F1] text-[#525252]", label: "Text file" },
+  MD: { Icon: FileCode, className: "bg-[#F3F3F1] text-[#525252]", label: "Markdown file" },
+  URL: { Icon: Globe, className: "bg-[#E0F5F8] text-[#0E7490]", label: "Web page" },
+};
+
 function SourceBadge({ type }: { type: string }) {
+  const icon = SOURCE_ICONS[type];
+  if (icon)
+    return (
+      <span
+        role="img"
+        aria-label={icon.label}
+        className={`size-5 shrink-0 rounded-[5px] flex items-center justify-center ${icon.className}`}
+      >
+        <icon.Icon className="size-3.5" aria-hidden />
+      </span>
+    );
   return (
     <span className="h-5 shrink-0 rounded-[5px] bg-[#F3F3F1] px-1.5 flex items-center font-geist-mono text-[9px] text-[#525252]">
       {type}
