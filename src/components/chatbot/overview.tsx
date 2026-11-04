@@ -44,7 +44,7 @@ const formatShortDate = (iso: string) =>
 const pillButton =
   "rounded-pill text-p4 inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-2 px-5 font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0";
 
-/** The three channels in the order the web app lists them, with what each one is doing now. */
+/** The three channels with the names, icons and order of the Channels page, and what each one is doing now. */
 export function channelRows(bot: Chatbot, channels: ChatbotChannels) {
   const live: Record<ChatbotStatus, { label: string; tone: PillTone }> = {
     active: { label: "Live", tone: "success" },
@@ -61,9 +61,17 @@ export function channelRows(bot: Chatbot, channels: ChatbotChannels) {
   const { publicLink: link, widget, telegram } = channels;
   return [
     {
+      key: "link",
+      label: "Public Share Link",
+      icon: "icons/channel-icon.svg",
+      connected: link.configured,
+      state: state(link.configured, link.enabled),
+      detail: link.configured && link.url ? link.url : "Not connected · share a page guests can open in any browser",
+    },
+    {
       key: "widget",
-      label: "Web widget",
-      icon: Globe,
+      label: "Web Widget",
+      icon: "icons/channel-icon-2.svg",
       connected: widget.configured,
       state: state(widget.configured, widget.enabled),
       detail: widget.configured
@@ -72,21 +80,13 @@ export function channelRows(bot: Chatbot, channels: ChatbotChannels) {
     },
     {
       key: "telegram",
-      label: "Telegram",
-      icon: Send,
+      label: "Telegram Bot",
+      icon: "icons/channel-icon-3.svg",
       connected: telegram.connected,
       state: state(telegram.connected, true),
       detail: telegram.connected
         ? `${telegram.botUsername} · ${telegram.messagesThisWeek} messages this week`
         : "Not connected · answer inside a Telegram bot",
-    },
-    {
-      key: "link",
-      label: "Public link",
-      icon: Link2,
-      connected: link.configured,
-      state: state(link.configured, link.enabled),
-      detail: link.configured && link.url ? link.url : "Not connected · share a page guests can open in any browser",
     },
   ];
 }
@@ -696,15 +696,13 @@ export function ChannelsCard({
         <p className="text-p4 text-ink-muted">{"Loading channels…"}</p>
       ) : (
         <div className="space-y-3">
-          {rows.map(({ key, label, icon: Icon, state, detail }) => {
+          {rows.map(({ key, label, icon, state, detail }) => {
             const open = expanded.has(key);
             const detailId = `${idPrefix}-${key}`;
             return (
               <div key={key} className="rounded-small border-line border p-4">
                 <div className="flex items-center gap-3">
-                  <span className="bg-subtle rounded-small text-ink-secondary flex size-9 shrink-0 items-center justify-center">
-                    <Icon aria-hidden className="size-4" />
-                  </span>
+                  <img className="size-9 shrink-0" src={icon} alt="" />
                   <span className="text-p4 text-ink min-w-0 flex-1 truncate font-bold">{label}</span>
                   <StatusPill tone={state.tone} className="shrink-0">
                     {state.label}
