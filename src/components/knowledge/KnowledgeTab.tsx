@@ -150,7 +150,7 @@ export function KnowledgeTab({
       {newDocs.length > 0 &&
         (newReady ? (
           <div className="self-stretch bg-success-tint border border-[#B7E2C8] rounded-[14px] flex items-center gap-3 px-4 py-3">
-            <span className="flex-1 font-gabarito text-[14px] text-success-text">
+            <span className="flex-1 font-gabarito text-[16px] text-success-text">
               {`${newDocs.length === 1 ? `“${newDocs[0].name}” is` : `${newDocs.length} documents are`} ready. Ask the chatbot again — it can now answer from ${newDocs.length === 1 ? "it" : "them"}.`}
             </span>
             <Button variant="primary" onClick={onTest}>
@@ -166,10 +166,10 @@ export function KnowledgeTab({
       <div className="self-stretch flex items-stretch gap-5">
         <div className="flex-1 min-w-0 bg-[#FFFFFF] border border-[#E4E4E0] rounded-[16px] flex flex-col items-start gap-4 p-7">
           <div className="flex flex-col items-start gap-1">
-            <div className="font-gabarito font-bold text-[18px] leading-normal text-[#111111]">
+            <div className="font-gabarito font-bold text-[20px] leading-normal text-[#111111]">
               {"Upload documents"}
             </div>
-            <div className="font-gabarito text-[13px] leading-normal text-[#6B6B6B]">
+            <div className="font-gabarito text-[15px] leading-normal text-[#6B6B6B]">
               {"PDF, DOCX, TXT, MD, XLSX · up to 20 MB per file"}
             </div>
           </div>
@@ -191,10 +191,10 @@ export function KnowledgeTab({
             }`}
           >
             <img className="w-12 h-12 shrink-0" src="icons/frame-11.svg" alt="" />
-            <span className="font-gabarito font-medium text-[14px] leading-normal text-[#5B3FC4]">
+            <span className="font-gabarito font-medium text-[16px] leading-normal text-[#5B3FC4]">
               {dragging ? "Drop to upload" : "Drag files here or click to browse"}
             </span>
-            <span className="font-gabarito text-[12px] leading-normal text-[#8A8A86]">{`${Math.max(room, 0)} of ${SOURCES_MAX} sources left`}</span>
+            <span className="font-gabarito text-[14px] leading-normal text-[#8A8A86]">{`${Math.max(room, 0)} of ${SOURCES_MAX} sources left`}</span>
           </button>
           <input
             ref={inputRef}
@@ -210,10 +210,10 @@ export function KnowledgeTab({
         </div>
         <div className="flex-1 min-w-0 bg-[#FFFFFF] border border-[#E4E4E0] rounded-[16px] flex flex-col items-start gap-4 p-7">
           <div className="flex flex-col items-start gap-1">
-            <div className="font-gabarito font-bold text-[18px] leading-normal text-[#111111]">
+            <div className="font-gabarito font-bold text-[20px] leading-normal text-[#111111]">
               {"Import web pages"}
             </div>
-            <div className="font-gabarito text-[13px] leading-normal text-[#6B6B6B]">
+            <div className="font-gabarito text-[15px] leading-normal text-[#6B6B6B]">
               {"One link per line, or separated by commas"}
             </div>
           </div>
@@ -238,20 +238,20 @@ export function KnowledgeTab({
 
       {pending.length > 0 && (
         <div className="self-stretch bg-[#FFFFFF] border border-[#E4E4E0] rounded-[16px] flex flex-col items-start gap-3 p-5">
-          <div className="font-gabarito font-bold text-[16px] text-[#111111]">{`Ready to add (${ok.length})`}</div>
+          <div className="font-gabarito font-bold text-[18px] text-[#111111]">{`Ready to add (${ok.length})`}</div>
           <div className="self-stretch border border-[#ECECEA] rounded-[12px] overflow-hidden flex flex-col">
             {pending.map((p) => (
               <div
                 key={p.key}
                 className="border-b border-[#F0F0EE] last:border-b-0 flex items-center gap-3 px-4 py-2.5"
               >
-                <div className="w-11 h-6 shrink-0 bg-[#F3F3F1] rounded-[6px] flex justify-center items-center font-geist-mono text-[10px] text-[#525252]">
+                <div className="w-11 h-6 shrink-0 bg-[#F3F3F1] rounded-[6px] flex justify-center items-center font-geist-mono text-[12px] text-[#525252]">
                   {p.kind === "url" ? "URL" : p.type}
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col gap-1">
-                  <div className="truncate font-gabarito font-medium text-[14px] text-ink-primary">{p.name}</div>
+                  <div className="truncate font-gabarito font-medium text-[16px] text-ink-primary">{p.name}</div>
                   {p.error ? (
-                    <div className="font-gabarito text-[12px] text-danger-text">{p.error}</div>
+                    <div className="font-gabarito text-[14px] text-danger-text">{p.error}</div>
                   ) : p.kind === "file" && !p.uploadId ? (
                     <div className="w-60 h-1 bg-[#F0F0EE] rounded-full overflow-hidden">
                       <div
@@ -260,9 +260,9 @@ export function KnowledgeTab({
                       />
                     </div>
                   ) : p.kind === "url" && p.checking ? (
-                    <div className="font-gabarito text-[12px] text-ink-secondary">Checking the page…</div>
+                    <div className="font-gabarito text-[14px] text-ink-secondary">Checking the page…</div>
                   ) : (
-                    <div className="font-gabarito text-[12px] text-ink-secondary">
+                    <div className="font-gabarito text-[14px] text-ink-secondary">
                       {p.kind === "file" ? `Uploaded · ${formatBytes(p.sizeBytes)}` : "Page reachable"}
                     </div>
                   )}
@@ -270,7 +270,7 @@ export function KnowledgeTab({
                 <button
                   type="button"
                   onClick={() => discard(p)}
-                  className="shrink-0 font-gabarito font-medium text-[13px] text-ink-secondary hover:text-danger-text cursor-pointer"
+                  className="shrink-0 font-gabarito font-medium text-[15px] text-ink-secondary hover:text-danger-text cursor-pointer"
                 >
                   Remove
                 </button>
@@ -282,7 +282,7 @@ export function KnowledgeTab({
               {`Add ${ok.length} to knowledge base`}
             </Button>
             {busy && (
-              <span className="font-gabarito text-[13px] text-ink-secondary">Waiting for uploads to finish…</span>
+              <span className="font-gabarito text-[15px] text-ink-secondary">Waiting for uploads to finish…</span>
             )}
           </div>
         </div>
@@ -295,7 +295,7 @@ export function KnowledgeTab({
       )}
 
       <div className="self-stretch bg-bg-card border border-border-default rounded-[20px] flex flex-col items-start gap-3 p-5">
-        <div className="font-gabarito font-bold text-[18px] leading-[28px] text-ink-primary">
+        <div className="font-gabarito font-bold text-[20px] leading-[30px] text-ink-primary">
           {`Documents · ${ready} of ${bot.documents.length} ready`}
         </div>
         <DocumentRows documents={bot.documents} onView={onView} onRemove={setRemoving} />
@@ -326,7 +326,7 @@ export function DocumentRows({
   onView: (doc: ChatbotDocument) => void;
   onRemove?: (doc: ChatbotDocument) => void;
 }) {
-  if (!documents.length) return <div className="font-gabarito text-[14px] text-ink-secondary">No documents yet.</div>;
+  if (!documents.length) return <div className="font-gabarito text-[16px] text-ink-secondary">No documents yet.</div>;
   return (
     <div className="self-stretch border border-[#ECECEA] rounded-[16px] overflow-hidden flex flex-col">
       {documents.map((d) => (
@@ -334,17 +334,17 @@ export function DocumentRows({
           key={d.id}
           className="border-b border-[#F0F0EE] last:border-b-0 flex items-center gap-3 px-4 py-3 hover:bg-bg-page"
         >
-          <div className="w-11 h-6 shrink-0 bg-[#F3F3F1] rounded-[6px] flex justify-center items-center font-geist-mono text-[10px] text-[#525252]">
+          <div className="w-11 h-6 shrink-0 bg-[#F3F3F1] rounded-[6px] flex justify-center items-center font-geist-mono text-[12px] text-[#525252]">
             {d.kind === "url" ? "URL" : d.type}
           </div>
           <button
             type="button"
             onClick={() => onView(d)}
-            className="flex-1 min-w-0 text-left truncate font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary hover:underline cursor-pointer"
+            className="flex-1 min-w-0 text-left truncate font-gabarito font-medium text-[16px] leading-[22px] text-ink-primary hover:underline cursor-pointer"
           >
             {d.name}
           </button>
-          <div className="w-18 shrink-0 font-gabarito text-[12px] text-ink-secondary">{formatBytes(d.sizeBytes)}</div>
+          <div className="w-18 shrink-0 font-gabarito text-[14px] text-ink-secondary">{formatBytes(d.sizeBytes)}</div>
           <div className="w-24 shrink-0 flex justify-end">
             <StatusPill tone={DOC_PILL[d.status].tone} pulse={d.status === "processing"}>
               {DOC_PILL[d.status].label}
@@ -353,7 +353,7 @@ export function DocumentRows({
           <button
             type="button"
             onClick={() => onView(d)}
-            className="shrink-0 font-gabarito font-medium text-[13px] text-ink-primary hover:underline cursor-pointer"
+            className="shrink-0 font-gabarito font-medium text-[15px] text-ink-primary hover:underline cursor-pointer"
           >
             View
           </button>
@@ -364,7 +364,7 @@ export function DocumentRows({
                 <button
                   type="button"
                   onClick={() => onRemove(d)}
-                  className="font-gabarito font-medium text-[13px] text-ink-secondary hover:text-danger-text cursor-pointer"
+                  className="font-gabarito font-medium text-[15px] text-ink-secondary hover:text-danger-text cursor-pointer"
                 >
                   Remove
                 </button>

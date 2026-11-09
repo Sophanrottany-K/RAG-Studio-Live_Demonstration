@@ -46,18 +46,18 @@ export default function Screen04List() {
                   <div className="self-stretch shrink-0 overflow-hidden flex items-center gap-3">
                     <img className="w-11 h-11 shrink-0" src="icons/icon-tile-accent.svg" alt="" />
                     <div className="flex-1 min-w-0 self-stretch overflow-hidden flex justify-between items-center">
-                      <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[15px] leading-normal text-[#171A2B]">
+                      <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[17px] leading-normal text-[#171A2B]">
                         {"Total chatbots"}
                       </div>
                     </div>
                   </div>
                   <div className="self-stretch shrink-0 flex flex-col items-start gap-1">
                     <div className="shrink-0 flex items-center gap-1.5">
-                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[36px] leading-[40px] tracking-[-1px] text-[#171A2B]">
+                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[38px] leading-[42px] tracking-[-1px] text-[#171A2B]">
                         {stats.total}
                       </div>
                     </div>
-                    <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[13px] leading-[16px] text-[#5B6072]">
+                    <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[15px] leading-[18px] text-[#5B6072]">
                       {"Across all channels"}
                     </div>
                   </div>
@@ -66,18 +66,18 @@ export default function Screen04List() {
                   <div className="self-stretch shrink-0 overflow-hidden flex items-center gap-3">
                     <img className="w-11 h-11 shrink-0" src="icons/icon-tile-success.svg" alt="" />
                     <div className="flex-1 min-w-0 self-stretch overflow-hidden flex justify-between items-center">
-                      <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[15px] leading-normal text-[#171A2B]">
+                      <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[17px] leading-normal text-[#171A2B]">
                         {"Active"}
                       </div>
                     </div>
                   </div>
                   <div className="self-stretch shrink-0 flex flex-col items-start gap-1">
                     <div className="shrink-0 flex items-center gap-1.5">
-                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[36px] leading-[40px] tracking-[-1px] text-[#171A2B]">
+                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[38px] leading-[42px] tracking-[-1px] text-[#171A2B]">
                         {stats.active}
                       </div>
                     </div>
-                    <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[13px] leading-[16px] text-[#5B6072]">
+                    <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[15px] leading-[18px] text-[#5B6072]">
                       {`${stats.total ? Math.round((stats.active / stats.total) * 100) : 0}% of chatbots`}
                     </div>
                   </div>
@@ -86,18 +86,18 @@ export default function Screen04List() {
                   <div className="self-stretch shrink-0 overflow-hidden flex items-center gap-3">
                     <img className="w-11 h-11 shrink-0" src="icons/icon-tile-warning.svg" alt="" />
                     <div className="flex-1 min-w-0 self-stretch overflow-hidden flex justify-between items-center">
-                      <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[15px] leading-normal text-[#171A2B]">
+                      <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[17px] leading-normal text-[#171A2B]">
                         {"Not live"}
                       </div>
                     </div>
                   </div>
                   <div className="self-stretch shrink-0 flex flex-col items-start gap-1">
                     <div className="shrink-0 flex items-center gap-1.5">
-                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[36px] leading-[40px] tracking-[-1px] text-[#171A2B]">
+                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[38px] leading-[42px] tracking-[-1px] text-[#171A2B]">
                         {stats.notLive}
                       </div>
                     </div>
-                    <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[13px] leading-[16px] text-[#5B6072]">
+                    <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[15px] leading-[18px] text-[#5B6072]">
                       {"Pending, paused or draft"}
                     </div>
                   </div>
@@ -106,18 +106,18 @@ export default function Screen04List() {
                   <div className="self-stretch shrink-0 overflow-hidden flex items-center gap-3">
                     <img className="w-11 h-11 shrink-0" src="icons/icon-tile-danger.svg" alt="" />
                     <div className="flex-1 min-w-0 self-stretch overflow-hidden flex justify-between items-center">
-                      <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[15px] leading-normal text-[#171A2B]">
+                      <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[17px] leading-normal text-[#171A2B]">
                         {"Disabled"}
                       </div>
                     </div>
                   </div>
                   <div className="self-stretch shrink-0 flex flex-col items-start gap-1">
                     <div className="shrink-0 flex items-center gap-1.5">
-                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[36px] leading-[40px] tracking-[-1px] text-[#171A2B]">
+                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[38px] leading-[42px] tracking-[-1px] text-[#171A2B]">
                         {stats.disabled}
                       </div>
                     </div>
-                    <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[13px] leading-[16px] text-[#5B6072]">
+                    <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[15px] leading-[18px] text-[#5B6072]">
                       {"Disabled by an admin"}
                     </div>
                   </div>
@@ -126,10 +126,10 @@ export default function Screen04List() {
               <div className="self-stretch shrink-0 bg-bg-card border border-[#E4E4E0] rounded-[16px] flex flex-col items-start p-7">
                 <div className="self-stretch shrink-0 flex flex-col items-start gap-4 pb-5">
                   <div className="shrink-0 flex flex-col items-start gap-1">
-                    <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[18px] leading-[28px] text-text-primary">
+                    <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[20px] leading-[30px] text-text-primary">
                       {"All chatbots"}
                     </div>
-                    <div className="shrink-0 whitespace-pre font-gabarito text-[13px] leading-normal text-text-muted">
+                    <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-normal text-text-muted">
                       {"Search, filter and manage your AI assistants"}
                     </div>
                   </div>
@@ -143,7 +143,7 @@ export default function Screen04List() {
                         className="w-62.5"
                         buttonClassName="w-62.5 h-12 shrink-0 bg-bg-card border border-border-default aria-expanded:border-accent hover:border-accent rounded-[12px] flex items-center gap-2 pr-3 pl-3.5 text-left cursor-pointer transition-colors"
                       >
-                        <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[20px] text-ink-secondary">
+                        <div className="shrink-0 whitespace-pre font-gabarito text-[16px] leading-[22px] text-ink-secondary">
                           {"Sort:"}
                         </div>
                         <img
@@ -151,7 +151,7 @@ export default function Screen04List() {
                           src="icons/arrow-down-property-linear-property-arro.svg"
                           alt=""
                         />
-                        <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">
+                        <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[16px] leading-[22px] text-ink-primary">
                           {labelOf(SORT_OPTIONS, sort)}
                         </div>
                         <img className="w-3.5 h-3.5 shrink-0" src="icons/icon-caret-down.svg" alt="" />
@@ -166,11 +166,11 @@ export default function Screen04List() {
                         className="w-52.5"
                         buttonClassName="w-52.5 h-12 shrink-0 bg-bg-card border border-border-default aria-expanded:border-accent hover:border-accent rounded-[12px] flex items-center gap-2 pr-3 pl-3.5 text-left cursor-pointer transition-colors"
                       >
-                        <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[20px] text-ink-secondary">
+                        <div className="shrink-0 whitespace-pre font-gabarito text-[16px] leading-[22px] text-ink-secondary">
                           {"Status:"}
                         </div>
                         <div className="w-2 h-2 shrink-0 border-[1.5px] border-ink-secondary rounded-full" />
-                        <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">
+                        <div className="flex-1 min-w-0 whitespace-pre-wrap font-gabarito font-medium text-[16px] leading-[22px] text-ink-primary">
                           {labelOf(STATUS_OPTIONS, status)}
                         </div>
                         <img className="w-3.5 h-3.5 shrink-0" src="icons/icon-caret-down.svg" alt="" />
@@ -184,7 +184,7 @@ export default function Screen04List() {
                         placeholder="Search by bot name"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="flex-1 min-w-0 bg-transparent outline-none font-gabarito text-[14px] leading-[20px] text-ink-primary placeholder:text-ink-muted"
+                        className="flex-1 min-w-0 bg-transparent outline-none font-gabarito text-[16px] leading-[22px] text-ink-primary placeholder:text-ink-muted"
                       />
                     </label>
                     <div className="w-52.5 h-12 shrink-0 overflow-hidden" />
@@ -196,7 +196,7 @@ export default function Screen04List() {
                       onClick={go("/s1e")}
                     >
                       <img className="w-4.5 h-4.5 shrink-0" src="icons/icon-plus.svg" alt="" />
-                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[16px] leading-[20px] text-ink-on-dark">
+                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[18px] leading-[22px] text-ink-on-dark">
                         {"Create chatbot"}
                       </div>
                     </div>
@@ -204,44 +204,44 @@ export default function Screen04List() {
                 </div>
                 <div className="self-stretch h-11 shrink-0 bg-bg-sidebar-dark rounded-[10px] flex items-center gap-5 px-4">
                   <div className="flex-1 min-w-0 flex items-center gap-1">
-                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[11px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
+                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[13px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
                       {"Chatbot"}
                     </div>
                   </div>
                   <div className="w-37.5 shrink-0 flex items-center gap-2">
-                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[11px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
+                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[13px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
                       {"Status"}
                     </div>
                   </div>
                   <div className="w-47.5 shrink-0 flex items-center gap-2">
-                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[11px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
+                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[13px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
                       {"Knowledge base"}
                     </div>
                   </div>
                   <div className="w-37.5 shrink-0 flex items-center gap-2 cursor-pointer" onClick={go("/tch")}>
-                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[11px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
+                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[13px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
                       {"Channels"}
                     </div>
                   </div>
                   <div className="w-27.5 shrink-0 flex justify-end items-center gap-2">
-                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[11px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
+                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[13px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
                       {"Messages"}
                     </div>
                   </div>
                   <div className="w-32.5 shrink-0 flex items-center gap-2">
-                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[11px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
+                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[13px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
                       {"Created"}
                     </div>
                   </div>
                   <div className="w-32.5 shrink-0 flex items-center gap-2">
-                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[11px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
+                    <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[13px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
                       {"Last updated"}
                     </div>
                   </div>
                 </div>
                 <CreatedChatbotRows search={search} status={status} sort={sort} onStats={setStats} />
                 <div className="self-stretch shrink-0 flex justify-between items-center pt-5 pr-4 pl-4">
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[20px] text-[#6B6B6B]">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[16px] leading-[22px] text-[#6B6B6B]">
                     {stats.shown === 0
                       ? "No chatbots found"
                       : `Showing 1–${stats.shown} of ${stats.shown} chatbot${stats.shown === 1 ? "" : "s"}`}
@@ -249,17 +249,17 @@ export default function Screen04List() {
                   <div className="shrink-0 bg-[#F4F4F2] rounded-full flex items-center gap-1.5 px-5 py-1.5">
                     <div className="shrink-0 opacity-40 overflow-hidden flex items-center gap-1.5 pr-4.5">
                       <img className="w-3.5 h-3.5 shrink-0" src="icons/icon-chevron-left.svg" alt="" />
-                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[12px] leading-normal tracking-[0.08em] text-[#111111]">
+                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[14px] leading-normal tracking-[0.08em] text-[#111111]">
                         {"PREV"}
                       </div>
                     </div>
                     <div className="w-8.5 h-8.5 shrink-0 bg-[#111111] rounded-full flex justify-center items-center">
-                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[14px] leading-normal text-[#FFFFFF]">
+                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[16px] leading-normal text-[#FFFFFF]">
                         {"1"}
                       </div>
                     </div>
                     <div className="shrink-0 opacity-40 overflow-hidden flex items-center gap-1.5 pl-4.5">
-                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[12px] leading-normal tracking-[0.08em] text-[#111111]">
+                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[14px] leading-normal tracking-[0.08em] text-[#111111]">
                         {"NEXT"}
                       </div>
                       <img className="w-3.5 h-3.5 shrink-0" src="icons/icon-chevron-right.svg" alt="" />

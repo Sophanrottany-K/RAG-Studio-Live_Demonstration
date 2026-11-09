@@ -141,10 +141,10 @@ export default function Screen09S3e() {
           onChange={(e) => (takeFiles(e.target.files), (e.target.value = ""))}
         />
         <img className="w-16 h-16 shrink-0" src="icons/icon-tile-4.svg" alt="" />
-        <div className="font-gabarito font-bold text-[24px] leading-[28px] text-ink-primary">
+        <div className="font-gabarito font-bold text-[26px] leading-[30px] text-ink-primary">
           {dragOver ? "Drop to upload" : "Upload documents"}
         </div>
-        <div className="text-center font-gabarito text-[16px] leading-[24px] text-ink-secondary">
+        <div className="text-center font-gabarito text-[18px] leading-[26px] text-ink-secondary">
           {full ? (
             `You've reached ${SOURCES_MAX} sources.`
           ) : (
@@ -195,8 +195,8 @@ export default function Screen09S3e() {
       {counts.total > 0 && (
         <div className="self-stretch flex flex-col gap-3">
           <div className="self-stretch flex justify-between items-center">
-            <div className="font-gabarito font-medium text-[12px] leading-[16px] text-ink-primary">{`Added sources (${counts.total})`}</div>
-            <div className="font-gabarito text-[12px] leading-[16px] text-ink-secondary">
+            <div className="font-gabarito font-medium text-[14px] leading-[18px] text-ink-primary">{`Added sources (${counts.total})`}</div>
+            <div className="font-gabarito text-[14px] leading-[18px] text-ink-secondary">
               {[
                 counts.ready && `${counts.ready} uploaded`,
                 counts.busy && `${counts.busy} in progress`,
@@ -207,7 +207,7 @@ export default function Screen09S3e() {
             </div>
           </div>
           <div className="self-stretch bg-bg-card border border-border-default rounded-[16px] overflow-hidden flex flex-col">
-            <div className="self-stretch bg-bg-page border-b border-[#ECECEA] flex items-center gap-4 px-4 py-2 font-gabarito font-medium text-[10px] leading-[14px] tracking-[0.6px] text-ink-muted">
+            <div className="self-stretch bg-bg-page border-b border-[#ECECEA] flex items-center gap-4 px-4 py-2 font-gabarito font-medium text-[12px] leading-[16px] tracking-[0.6px] text-ink-muted">
               <div className="flex-1 min-w-0">NAME</div>
               <div className="w-21 shrink-0">TYPE</div>
               <div className="w-21 shrink-0">SIZE</div>
@@ -218,7 +218,7 @@ export default function Screen09S3e() {
               <SourceRow key={s.localId} source={s} />
             ))}
           </div>
-          <div className="font-gabarito text-[12px] leading-[16px] text-ink-secondary">
+          <div className="font-gabarito text-[14px] leading-[18px] text-ink-secondary">
             Uploaded sources are indexed after you create the chatbot. Processing continues in the background.
           </div>
         </div>
@@ -236,7 +236,7 @@ export default function Screen09S3e() {
         <Button variant="ghost" disabled={creating} onClick={requestCancel}>
           Cancel
         </Button>
-        <div className="flex-1 text-right font-gabarito text-[12px] leading-[16px] text-ink-secondary">
+        <div className="flex-1 text-right font-gabarito text-[14px] leading-[18px] text-ink-secondary">
           {counts.busy > 0
             ? "Wait for uploads to finish…"
             : counts.failed > 0 && counts.ready > 0
@@ -265,12 +265,12 @@ function SourceRow({ source }: { source: DraftSource }) {
   return (
     <div className="self-stretch border-b border-[#ECECEA] last:border-b-0 flex items-center gap-4 px-4 py-3">
       <div className="flex-1 min-w-0 flex items-center gap-2.5">
-        <div className="w-11 h-6 shrink-0 bg-[#F3F3F1] rounded-[6px] flex justify-center items-center font-geist-mono text-[10px] leading-[16px] tracking-[0.4px] text-[#525252]">
+        <div className="w-11 h-6 shrink-0 bg-[#F3F3F1] rounded-[6px] flex justify-center items-center font-geist-mono text-[12px] leading-[18px] tracking-[0.4px] text-[#525252]">
           {badge}
         </div>
         <div className="min-w-0 flex-1 flex flex-col gap-1">
           <div
-            className="truncate font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary"
+            className="truncate font-gabarito font-medium text-[16px] leading-[22px] text-ink-primary"
             title={source.url ?? source.name}
           >
             {source.name}
@@ -284,14 +284,14 @@ function SourceRow({ source }: { source: DraftSource }) {
             </div>
           )}
           {source.state === "failed" && (
-            <div className="font-gabarito text-[12px] leading-[16px] text-danger-text">{source.error}</div>
+            <div className="font-gabarito text-[14px] leading-[18px] text-danger-text">{source.error}</div>
           )}
         </div>
       </div>
-      <div className="w-21 shrink-0 font-gabarito text-[12px] leading-[16px] text-ink-secondary">
+      <div className="w-21 shrink-0 font-gabarito text-[14px] leading-[18px] text-ink-secondary">
         {source.kind === "url" ? "Web page" : source.type}
       </div>
-      <div className="w-21 shrink-0 font-gabarito text-[12px] leading-[16px] text-ink-secondary">
+      <div className="w-21 shrink-0 font-gabarito text-[14px] leading-[18px] text-ink-secondary">
         {formatBytes(source.sizeBytes)}
       </div>
       <div className="w-28 shrink-0">
@@ -309,7 +309,7 @@ function SourceRow({ source }: { source: DraftSource }) {
         {source.state === "failed" && canRetry(source.localId) && (
           <button
             type="button"
-            className="font-gabarito font-medium text-[12px] underline text-ink-primary cursor-pointer"
+            className="font-gabarito font-medium text-[14px] underline text-ink-primary cursor-pointer"
             onClick={() => retrySource(source.localId)}
           >
             Retry

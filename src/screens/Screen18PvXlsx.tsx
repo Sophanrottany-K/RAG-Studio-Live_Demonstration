@@ -13,20 +13,20 @@ export default function Screen18PvXlsx() {
       <div className="absolute right-0 top-0 w-180 h-full bg-[#FFFFFF] shadow-[-8px_0px_40px_0px_#0000001F] flex flex-col items-start">
         <div className="self-stretch shrink-0 border-b border-[#E4E4E0] flex items-center gap-3 pt-6 pr-7 pb-5 pl-7">
           <div className="w-10 h-10 shrink-0 bg-[#1F8A551F] rounded-[10px] flex justify-center items-center">
-            <div className="shrink-0 whitespace-pre font-geist-mono font-bold text-[10px] leading-normal text-[#1F8A55]">
+            <div className="shrink-0 whitespace-pre font-geist-mono font-bold text-[12px] leading-normal text-[#1F8A55]">
               {"XLSX"}
             </div>
           </div>
           <div className="flex-1 min-w-0 flex flex-col items-start gap-1">
-            <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[18px] leading-normal text-[#111111]">
+            <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[20px] leading-normal text-[#111111]">
               {"Pricing plans Q4.xlsx"}
             </div>
             <div className="shrink-0 flex items-center gap-2">
-              <div className="shrink-0 whitespace-pre font-gabarito text-[12px] leading-normal text-[#6B6B6B]">
+              <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-normal text-[#6B6B6B]">
                 {"XLSX · 356 KB · 3 sheets · 248 rows · uploaded Oct 11, 2026"}
               </div>
               <div className="w-[89px] shrink-0 bg-[#2E9E664D] border border-[#2E9E66] rounded-[99px] flex justify-center items-center px-2.5 py-1">
-                <div className="shrink-0 whitespace-pre font-geist-mono font-bold text-[11px] leading-[16px] tracking-[0.01em] uppercase text-[#17653F]">
+                <div className="shrink-0 whitespace-pre font-geist-mono font-bold text-[13px] leading-[18px] tracking-[0.01em] uppercase text-[#17653F]">
                   {"READY"}
                 </div>
               </div>
@@ -35,10 +35,10 @@ export default function Screen18PvXlsx() {
           <img className="w-10 h-10 shrink-0" src="icons/frame-12.svg" alt="" />
         </div>
         <div className="self-stretch shrink-0 bg-[#FAFAF9] flex justify-between items-center px-7 py-3">
-          <div className="shrink-0 whitespace-pre font-geist-mono font-bold text-[12px] leading-normal tracking-[0.01em] uppercase text-[#6B6B6B]">
+          <div className="shrink-0 whitespace-pre font-geist-mono font-bold text-[14px] leading-normal tracking-[0.01em] uppercase text-[#6B6B6B]">
             {"Original document"}
           </div>
-          <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[12px] leading-normal text-[#6B6B6B]">
+          <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[14px] leading-normal text-[#6B6B6B]">
             {"Sheet 1 of 3 · 248 rows"}
           </div>
         </div>
@@ -48,7 +48,7 @@ export default function Screen18PvXlsx() {
         className="absolute right-8 bottom-8 w-[179px] h-11 bg-[#4B3FD1] rounded-full shadow-[0px_8px_24px_0px_#00000033] overflow-hidden flex items-center justify-center px-5.5 py-[13px] cursor-pointer"
         onClick={go("/dPend")}
       >
-        <div className="shrink-0 whitespace-pre font-gabarito font-semibold text-[15px] leading-normal text-[#FFFFFF]">
+        <div className="shrink-0 whitespace-pre font-gabarito font-semibold text-[17px] leading-normal text-[#FFFFFF]">
           {"← Back to chatbot"}
         </div>
       </div>

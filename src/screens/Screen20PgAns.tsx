@@ -24,7 +24,7 @@ export default function Screen20PgAns() {
             <div className="self-stretch flex-1 min-h-0 overflow-y-auto flex flex-col items-start gap-5 p-7">
               <div className="self-stretch shrink-0 overflow-hidden flex justify-end items-start">
                 <div className="shrink-0 bg-[#111111] rounded-[20px] overflow-hidden flex flex-col items-start px-4.5 py-3">
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-normal text-[#FFFFFF]">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-normal text-[#FFFFFF]">
                     {"What is the refund policy for annual plans?"}
                   </div>
                 </div>
@@ -32,42 +32,42 @@ export default function Screen20PgAns() {
               <div className="self-stretch shrink-0 flex flex-col items-start gap-3.5">
                 <Head />
                 <div className="w-190 shrink-0 overflow-hidden flex flex-wrap items-center gap-x-1 gap-y-0.5">
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"Annual plans can be refunded in"}
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"full within 30 days of purchase."}
                   </div>
                   <div
                     className="shrink-0 min-w-5 bg-bg-surface border border-border-hairline/10 rounded-[4px] flex justify-center items-center px-[5px] py-0.5 cursor-pointer"
                     onClick={go("/pgSrc")}
                   >
-                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[11px] leading-[14px] text-ink-default">
+                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[13px] leading-[16px] text-ink-default">
                       {"1"}
                     </div>
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"After that, refunds are pro-rated for"}
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"the remaining months."}
                   </div>
                   <div className="shrink-0 min-w-5 bg-bg-surface border border-border-hairline/10 rounded-[4px] flex justify-center items-center px-[5px] py-0.5">
-                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[11px] leading-[14px] text-ink-default">
+                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[13px] leading-[16px] text-ink-default">
                       {"3"}
                     </div>
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"The money goes back to the"}
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"original payment method in 5–7 business"}
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"days."}
                   </div>
                   <div className="shrink-0 min-w-5 bg-bg-surface border border-border-hairline/10 rounded-[4px] flex justify-center items-center px-[5px] py-0.5">
-                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[11px] leading-[14px] text-ink-default">
+                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[13px] leading-[16px] text-ink-default">
                       {"2"}
                     </div>
                   </div>
@@ -77,11 +77,11 @@ export default function Screen20PgAns() {
                     className="shrink-0 bg-bg-card border border-border-default rounded-full flex justify-center items-center gap-2 px-4 py-3 cursor-pointer"
                     onClick={go("/pgSrc")}
                   >
-                    <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[14px] leading-[16px] text-ink-primary">
+                    <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[16px] leading-[18px] text-ink-primary">
                       {"View retrieved sources (3)"}
                     </div>
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[12px] leading-normal text-[#6B6B6B]">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-normal text-[#6B6B6B]">
                     {"GPT-4o mini · 1.8s"}
                   </div>
                 </div>

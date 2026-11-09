@@ -49,7 +49,7 @@ import { PROPERTY_DOCUMENTS, loadPropertySeedFile } from "./propertyDocuments";
 import { fileStore } from "./documentStore";
 import { TEXT_VERSION, extractText } from "./extractText";
 import { computeAnalytics, computeUnanswered, type ChatEvent } from "./mockAnalytics";
-import { markdownToPlainText, preparedAnswer } from "./preparedAnswers";
+import { PREPARED_SOURCE, markdownToPlainText, preparedAnswer } from "./preparedAnswers";
 import { siteStorage } from "./siteStorage";
 
 const DB_KEY = "rag-studio-mock-db";
@@ -68,14 +68,12 @@ const MODELS: ModelCatalog = {
       label: "qwen3:8b",
       provider: "Ollama · self-hosted",
       description: "multilingual communication and problem-solving.",
-   
     },
     {
       id: "llama3.1:8b",
       label: "llama3.1:8b",
       provider: "Ollama · self-hosted",
       description: "everyday conversations and customer support.",
-      
     },
     {
       id: "mistral-nemo:12b",
@@ -363,10 +361,13 @@ function latency(signal?: AbortSignal, min = 250, max = 650) {
 }
 
 function toChatbot(stored: StoredChatbot, now = Date.now()): Chatbot {
-  const documents: ChatbotDocument[] = stored.documents.map(({ startsAt, readyAt, ...doc }) => ({
-    ...doc,
-    status: now < startsAt ? "queued" : now < readyAt ? "processing" : "ready",
-  }));
+  const documents: ChatbotDocument[] = stored.documents.map(({ startsAt, readyAt, ...doc }) =>
+    now < startsAt
+      ? { ...doc, status: "queued" }
+      : now < readyAt
+        ? { ...doc, status: "processing", progress: (now - startsAt) / Math.max(1, readyAt - startsAt) }
+        : { ...doc, status: "ready" },
+  );
   const allReady = documents.length > 0 && documents.every((d) => d.status === "ready");
   const { published, ...rest } = stored;
   return { ...rest, documents, status: published ?? (allReady ? "pending" : "draft") };
@@ -391,42 +392,42 @@ function previewUrl(text: string): UrlPreview {
   return { url, host: parsed.hostname, title };
 }
 
+/** Processing a batch of sources takes one minute end to end: a short queued wait, then the five stages. */
+const BATCH_MS = 60_000;
+const QUEUE_DELAY_MS = 1200;
+
 /**
  * Turns uploads and URLs into documents that the ingestion worker processes one after another,
  * starting after `startAfter` (a timestamp). Returns the stored files to re-key to the new documents.
  */
 function queueSources(db: Db, uploadIds: string[], urls: string[], startAfter: number) {
-  let cursor = Math.max(Date.now(), startAfter) + 1200;
+  let cursor = Math.max(Date.now(), startAfter) + QUEUE_DELAY_MS;
   const documents: StoredDocument[] = [];
   const moves: [string, string][] = [];
-  const queue = (doc: Omit<StoredDocument, "startsAt" | "readyAt">, workMs: number) => {
-    documents.push({ ...doc, startsAt: cursor, readyAt: cursor + workMs });
-    cursor += workMs;
+  // The whole batch takes BATCH_MS, split evenly so the processing stepper advances at a steady pace.
+  const perDocMs = (BATCH_MS - QUEUE_DELAY_MS) / Math.max(1, uploadIds.length + urls.length);
+  const queue = (doc: Omit<StoredDocument, "startsAt" | "readyAt">) => {
+    documents.push({ ...doc, startsAt: cursor, readyAt: cursor + perDocMs });
+    cursor += perDocMs;
   };
   for (const uploadId of uploadIds) {
     const upload = db.uploads[uploadId];
     if (!upload)
       throw new ApiError("An uploaded file expired. Please upload it again.", 410, "upload_expired", "sources");
     const docId = id("doc");
-    queue(
-      { id: docId, kind: "file", name: upload.name, type: upload.type, sizeBytes: upload.sizeBytes },
-      2500 + Math.min(upload.sizeBytes / 2000, 6000),
-    );
+    queue({ id: docId, kind: "file", name: upload.name, type: upload.type, sizeBytes: upload.sizeBytes });
     moves.push([uploadId, docId]);
     delete db.uploads[uploadId];
   }
   for (const url of urls) {
     const preview = previewUrl(url);
-    queue(
-      {
-        id: id("doc"),
-        kind: "url",
-        name: `${preview.host}${new URL(preview.url).pathname.replace(/\/$/, "")}`,
-        type: "Web page",
-        sizeBytes: null,
-      },
-      3000,
-    );
+    queue({
+      id: id("doc"),
+      kind: "url",
+      name: `${preview.host}${new URL(preview.url).pathname.replace(/\/$/, "")}`,
+      type: "Web page",
+      sizeBytes: null,
+    });
   }
   return { documents, moves };
 }
@@ -820,6 +821,21 @@ async function removeDocument(chatbotId: string, docId: string) {
 }
 
 async function documentOriginal(bot: Chatbot, docId: string): Promise<DocumentOriginal> {
+  // The prepared KOSIGN_1 file cited by the prepared answers: shown whether or not it was uploaded.
+  if (docId === PREPARED_SOURCE.id)
+    return {
+      document: {
+        id: PREPARED_SOURCE.id,
+        kind: "file",
+        name: PREPARED_SOURCE.name,
+        type: PREPARED_SOURCE.type,
+        sizeBytes: new Blob([PREPARED_SOURCE.text]).size,
+        status: "ready",
+      },
+      file: null,
+      text: PREPARED_SOURCE.text,
+      uploadedAt: bot.createdAt,
+    };
   const document = bot.documents.find((d) => d.id === docId);
   if (!document) throw new ApiError("Document not found.", 404, "not_found");
   const demo = DEMO_DOCUMENTS.find((d) => d.id === docId);
@@ -929,6 +945,36 @@ const trim = (text: string, max = 420) => {
   return clean.length <= max ? clean : `${clean.slice(0, max).replace(/\s+\S*$/, "")}…`;
 };
 
+/**
+ * The part of a document a prepared answer was written from, exactly as it is in the document: from the answer's
+ * first line to its last. Markdown marks, numbering and spacing are ignored while matching (the answer drops
+ * "**" and "1."), so the whole section is found, and the source viewer highlights it as one passage.
+ */
+function sectionIn(text: string, answer: string) {
+  const lines = markdownToPlainText(answer)
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const squash = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+  // The document's letters and digits only, and where each one is in the original text.
+  let flat = "";
+  const at: number[] = [];
+  for (let i = 0; i < text.length; i++) {
+    const c = squash(text[i]);
+    if (c.length !== 1) continue;
+    flat += c;
+    at.push(i);
+  }
+  const first = squash(lines[0] ?? "");
+  const last = squash(lines[lines.length - 1] ?? "");
+  if (first.length < 12 || last.length < 12) return undefined;
+  const start = flat.indexOf(first);
+  if (start < 0) return undefined;
+  const end = flat.indexOf(last, start);
+  if (end < 0) return undefined;
+  return text.slice(at[start], at[end + last.length - 1] + 1);
+}
+
 async function answerFor(bot: Chatbot, question: unknown): Promise<ChatAnswer> {
   if (typeof question !== "string" || !question.trim())
     throw new ApiError("Type a question first.", 422, "invalid", "question");
@@ -951,38 +997,40 @@ async function answerFor(bot: Chatbot, question: unknown): Promise<ChatAnswer> {
   const wantsDefinition = asksDefinition(question);
   type Hit = { doc: (typeof ready)[number]; paragraph: string; coverage: number; score: number };
   type Passage = { text: string; words: string[]; heading: Set<string> };
-  const library: { doc: (typeof ready)[number]; passages: Passage[] }[] = [];
+  const library: { doc: (typeof ready)[number]; text: string; passages: Passage[] }[] = [];
   for (const doc of ready) {
     const text =
       DEMO_DOCUMENTS.find((d) => d.id === doc.id)?.text ?? (await ensureSeedFile(doc.id, doc.type))?.text ?? "";
     library.push({
       doc,
+      text,
       passages: chunk(text).map((p) => ({ text: p, words: termList(p), heading: terms(p.slice(0, 40)) })),
     });
   }
   const prepared = preparedAnswer(question);
   if (prepared) {
     // Only a chatbot about KOSIGN gives these answers; any other falls through to its own documents.
-    const cited = library.flatMap(({ doc, passages }) => {
-      const passage = passages.find((p) => /kosign/i.test(p.text))?.text;
-      return passage || /kosign/i.test(doc.name) ? [{ doc, passage }] : [];
-    });
+    const mentionsKosign = library.some(
+      ({ doc, passages }) => /kosign/i.test(doc.name) || passages.some((p) => /kosign/i.test(p.text)),
+    );
     const aboutKosign = /kosign/i.test([bot.name, bot.description, ...bot.settings.starterQuestions].join(" "));
-    if (cited.length || aboutKosign) {
+    if (mentionsKosign || aboutKosign) {
       const rich = bot.settings.formatting === "Rich text";
-      const shown = cited.length
-        ? cited
-        : library.slice(0, 1).map(({ doc, passages }) => ({ doc, passage: passages[0]?.text }));
+      // The source is always the prepared KOSIGN_1 file (bundled with the app), with the answer's section.
+      const passage = sectionIn(PREPARED_SOURCE.text, prepared);
       return {
         answered: true,
         markdown: rich,
         sourcesSearched: ready.length,
-        sources: shown.slice(0, 3).map(({ doc, passage }) => ({
-          documentId: doc.id,
-          name: doc.name,
-          type: doc.kind === "url" ? "URL" : doc.type,
-          snippet: trim(passage || `“${doc.name}” covers this topic.`, 220),
-        })),
+        sources: [
+          {
+            documentId: PREPARED_SOURCE.id,
+            name: PREPARED_SOURCE.name,
+            type: PREPARED_SOURCE.type,
+            snippet: trim(markdownToPlainText(passage ?? prepared), 220),
+            ...(passage && { passage: trim(passage, 4000) }),
+          },
+        ],
         answer: rich ? prepared : markdownToPlainText(prepared),
       };
     }
@@ -1031,23 +1079,19 @@ async function answerFor(bot: Chatbot, question: unknown): Promise<ChatAnswer> {
     };
   }
 
-  // Best passage per document, up to 3 documents.
-  const sources: ChatSource[] = [];
-  for (const hit of confident) {
-    if (sources.length === 3) break;
-    if (sources.some((s) => s.documentId === hit.doc.id)) continue;
-    sources.push({
-      documentId: hit.doc.id,
-      name: hit.doc.name,
-      type: hit.doc.kind === "url" ? "URL" : hit.doc.type,
-      snippet: trim(hit.paragraph || `“${hit.doc.name}” covers this topic.`, 220),
-    });
-  }
-  // Up to two passages: the best one, then the next best — from the same document when it has one.
+  // Only the single best source: the document with the best-matching passage.
   const [best] = confident;
-  const second =
-    confident.find((h) => h !== best && h.doc.id === best.doc.id && h.coverage >= best.coverage) ??
-    confident.find((h) => h.doc.id !== best.doc.id && h.coverage >= best.coverage);
+  const sources: ChatSource[] = [
+    {
+      documentId: best.doc.id,
+      name: best.doc.name,
+      type: best.doc.kind === "url" ? "URL" : best.doc.type,
+      snippet: trim(best.paragraph || `“${best.doc.name}” covers this topic.`, 220),
+      ...(best.paragraph && { passage: trim(best.paragraph, 4000) }),
+    },
+  ];
+  // Up to two passages, both from that one source: the best one, then its next best.
+  const second = confident.find((h) => h !== best && h.doc.id === best.doc.id && h.coverage >= best.coverage);
   const lead = best.paragraph
     ? trim(best.paragraph)
     : `“${best.doc.name}” covers this topic — open the source below for the details.`;
@@ -1221,6 +1265,18 @@ export async function mockRequest<T>(method: string, path: string, body?: unknow
     const { bot } = findPublic(match[1]);
     if (bot.settings.sourceVisibility !== "Full document")
       throw new ApiError("The owner doesn't share source documents.", 403, "forbidden");
+    return (await documentOriginal(bot, match[2])) as T;
+  }
+  if ((match = route.match(/^GET \/widget\/([\w-]+)\/documents\/([\w-]+)\/original$/))) {
+    const q = url.searchParams;
+    const { bot, chat } = findWidget(match[1], {
+      primaryColor: q.get("color") ?? undefined,
+      position: (q.get("position") ?? undefined) as WidgetEmbed["position"] | undefined,
+      welcomeMessage: q.get("welcome") ?? undefined,
+      allowedDomains: q.get("domains")?.split(",").filter(Boolean),
+    });
+    if (!chat.available) throw new ApiError("This chatbot is temporarily unavailable.", 503, "chatbot_unavailable");
+    // The widget always opens sources, whatever the chatbot's source visibility (unlike the public link).
     return (await documentOriginal(bot, match[2])) as T;
   }
   if ((match = route.match(/^GET \/widget\/([\w-]+)$/))) {

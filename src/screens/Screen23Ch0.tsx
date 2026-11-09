@@ -79,25 +79,25 @@ export default function Screen23Ch0() {
                 className="rounded-[8px] flex items-center gap-2 pt-1.5 pr-2.5 pb-1.5 pl-2 cursor-pointer hover:bg-bg-soft"
               >
                 <img className="w-4 h-4 shrink-0" src="icons/arrow-left-property-linear.svg" alt="" />
-                <span className="font-gabarito text-[14px] leading-[20px] text-ink-secondary">{"Chatbots"}</span>
+                <span className="font-gabarito text-[16px] leading-[22px] text-ink-secondary">{"Chatbots"}</span>
               </button>
-              <span className="font-gabarito text-[14px] leading-[20px] text-ink-muted">{"/"}</span>
+              <span className="font-gabarito text-[16px] leading-[22px] text-ink-muted">{"/"}</span>
               <button
                 type="button"
                 disabled={!selected}
                 onClick={selected ? go(`/bot?id=${selected.id}`) : undefined}
-                className="rounded-[8px] px-2.5 py-1.5 font-gabarito text-[14px] leading-[20px] text-ink-secondary cursor-pointer hover:bg-bg-soft hover:text-ink-primary disabled:cursor-default"
+                className="rounded-[8px] px-2.5 py-1.5 font-gabarito text-[16px] leading-[22px] text-ink-secondary cursor-pointer hover:bg-bg-soft hover:text-ink-primary disabled:cursor-default"
               >
                 {selected?.name ?? "…"}
               </button>
-              <span className="font-gabarito text-[14px] leading-[20px] text-ink-muted">{"/"}</span>
-              <span className="px-1 font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">
+              <span className="font-gabarito text-[16px] leading-[22px] text-ink-muted">{"/"}</span>
+              <span className="px-1 font-gabarito font-medium text-[16px] leading-[22px] text-ink-primary">
                 {"Channels"}
               </span>
             </nav>
             <div className="self-stretch shrink-0 flex flex-col items-start gap-1.5">
-              <h1 className="font-gabarito font-bold text-[32px] leading-normal text-[#111111]">{"Channels"}</h1>
-              <div className="font-gabarito text-[15px] leading-normal text-[#6B6B6B]">
+              <h1 className="font-gabarito font-bold text-[34px] leading-normal text-[#111111]">{"Channels"}</h1>
+              <div className="font-gabarito text-[17px] leading-normal text-[#6B6B6B]">
                 {"Connect your assistants to the places your audience uses."}
               </div>
             </div>
@@ -105,7 +105,7 @@ export default function Screen23Ch0() {
             <div className="w-115 shrink-0 flex flex-col items-start gap-1.5">
               <label
                 htmlFor="channels-bot"
-                className="font-gabarito font-medium text-[14px] leading-normal text-[#111111]"
+                className="font-gabarito font-medium text-[16px] leading-normal text-[#111111]"
               >
                 {"Selected chatbot"}
               </label>
@@ -125,10 +125,10 @@ export default function Screen23Ch0() {
             </div>
 
             <div className="self-stretch shrink-0 flex flex-col items-start gap-1">
-              <div className="font-gabarito font-bold text-[22px] leading-normal text-[#111111]">
+              <div className="font-gabarito font-bold text-[24px] leading-normal text-[#111111]">
                 {channels ? `Channels · ${connected} of 3 live` : "Channels"}
               </div>
-              <div className="font-gabarito text-[14px] leading-normal text-[#6B6B6B]">
+              <div className="font-gabarito text-[16px] leading-normal text-[#6B6B6B]">
                 {
                   "Publish this chatbot on a public link, your website, or Telegram. Each channel shows its status and messages this week."
                 }
@@ -143,7 +143,7 @@ export default function Screen23Ch0() {
                 </div>
               </Banner>
             ) : !channels ? (
-              <div className="self-stretch flex items-center gap-3 py-10 justify-center font-gabarito text-[14px] text-ink-secondary">
+              <div className="self-stretch flex items-center gap-3 py-10 justify-center font-gabarito text-[16px] text-ink-secondary">
                 <Spinner /> Loading channels…
               </div>
             ) : (

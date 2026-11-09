@@ -37,8 +37,8 @@ export function ConfirmDialog({
         aria-label={title}
         className="relative w-140 max-w-[90%] bg-bg-card rounded-[20px] shadow-[0px_16px_48px_0px_#0000001F] flex flex-col gap-2 p-6"
       >
-        <div className="font-gabarito font-bold text-[20px] leading-[28px] text-ink-primary">{title}</div>
-        <div className="font-gabarito text-[14px] leading-[20px] text-ink-secondary">{children}</div>
+        <div className="font-gabarito font-bold text-[22px] leading-[30px] text-ink-primary">{title}</div>
+        <div className="font-gabarito text-[16px] leading-[22px] text-ink-secondary">{children}</div>
         <div className="flex justify-end gap-2.5 pt-4">
           <Button onClick={onCancel} autoFocus>
             {cancelLabel}

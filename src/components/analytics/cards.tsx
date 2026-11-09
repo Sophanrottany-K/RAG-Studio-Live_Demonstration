@@ -75,7 +75,7 @@ const RANGES: { key: AnalyticsGranularity; label: string }[] = [
   { key: "monthly", label: "Monthly" },
 ];
 
-const axisTick = { fill: "var(--ink-muted)", fontSize: 12 };
+const axisTick = { fill: "var(--ink-muted)", fontSize: 14 };
 
 function pointLabel(iso: string, granularity: AnalyticsGranularity) {
   const d = new Date(iso);
@@ -155,7 +155,7 @@ export function MessageTrendChart({
                 background: "var(--bg-card)",
                 border: "1px solid var(--border-default)",
                 borderRadius: 12,
-                fontSize: 12,
+                fontSize: 14,
               }}
               labelStyle={{ color: "var(--ink-primary)" }}
             />

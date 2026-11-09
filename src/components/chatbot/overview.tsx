@@ -450,7 +450,7 @@ function Card({
 }
 
 const RANGES = [7, 14, 30] as const;
-const axisTick = { fill: "var(--ink-muted)", fontSize: 12 };
+const axisTick = { fill: "var(--ink-muted)", fontSize: 14 };
 
 /** Messages over time, with a 7D / 14D / 30D switch. */
 export function MessagesChartCard({ chatbotId }: { chatbotId: string }) {
@@ -554,7 +554,7 @@ export function MessagesChartCard({ chatbotId }: { chatbotId: string }) {
                   border: "none",
                   borderRadius: 12,
                   color: "var(--ink-inverse)",
-                  fontSize: 12,
+                  fontSize: 14,
                 }}
                 labelStyle={{ color: "var(--ink-inverse)", opacity: 0.7 }}
                 itemStyle={{ color: "var(--ink-inverse)" }}

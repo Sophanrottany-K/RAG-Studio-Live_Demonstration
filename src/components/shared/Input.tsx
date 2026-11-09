@@ -35,12 +35,12 @@ export function Input({ value, placeholder = "Ask a question…", onChange, onSu
           }
         }}
         placeholder={placeholder}
-        className="flex-1 min-w-0 bg-transparent border-0 px-0 py-0 text-[15px] leading-normal text-[#111111] placeholder:text-[#6B6B6B] focus:outline-none"
+        className="flex-1 min-w-0 bg-transparent border-0 px-0 py-0 text-[17px] leading-normal text-[#111111] placeholder:text-[#6B6B6B] focus:outline-none"
       />
       <button
         type="button"
         onClick={handleSubmit}
-        className="w-10 h-10 shrink-0 bg-[#111111] rounded-full overflow-hidden flex justify-center items-center text-[18px] font-bold text-[#FFFFFF] cursor-pointer transition-opacity hover:opacity-90"
+        className="w-10 h-10 shrink-0 bg-[#111111] rounded-full overflow-hidden flex justify-center items-center text-[20px] font-bold text-[#FFFFFF] cursor-pointer transition-opacity hover:opacity-90"
         aria-label="Send question"
       >
         ↑

@@ -1,9 +1,21 @@
 // Answers written ahead of time for questions the demo must answer word for word (from answer.md).
 // The mock server uses them instead of quoting passages, once it has checked the chatbot covers the topic.
 
-const WHAT_IS_KOSIGN = `## What is KOSIGN?
+import kosignProfile from "../../sample-documents/kosign-assistant/KOSIGN_1_Complete_Company_Profile_and_History.md?raw";
 
-KOSIGN (Korea Software Innovation Global Network) is a South Korean-founded software and IT company established in Cambodia in April 2013 by Webcash Group.
+/**
+ * The document every prepared answer cites: the prepared KOSIGN_1 file, bundled with the app, so "view original"
+ * always opens it (with the answer's section highlighted), whatever the chatbot's own knowledge base holds.
+ */
+export const PREPARED_SOURCE = {
+  id: "kosign_profile_md",
+  name: "KOSIGN_1_Complete_Company_Profile_and_History.md",
+  type: "MD",
+  text: kosignProfile,
+};
+
+// The answers start straight away: the question is already shown above them in the chat, so no heading repeats it.
+const WHAT_IS_KOSIGN = `KOSIGN (Korea Software Innovation Global Network) is a South Korean-founded software and IT company established in Cambodia in April 2013 by Webcash Group.
 
 The company focuses on software development, financial technology (FinTech), and digital business solutions.
 
@@ -15,9 +27,7 @@ The company focuses on software development, financial technology (FinTech), and
 
 KOSIGN also develops business software products such as WABOOKS and WeBill365.`;
 
-const WHY_CAMBODIA = `## Why Was KOSIGN Established in Cambodia?
-
-KOSIGN was established in Cambodia for two main purposes:
+const WHY_CAMBODIA = `KOSIGN was established in Cambodia for two main purposes:
 
 ### Developing Cambodian IT Talent
 

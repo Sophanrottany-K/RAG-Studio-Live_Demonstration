@@ -9,6 +9,8 @@ import { Button, Spinner, StatusPill } from "../create/ui";
 import { DemoDocxOriginal } from "./DemoDocxOriginal";
 import { DemoPdfOriginal } from "./DemoPdfOriginal";
 import { DemoXlsxOriginal } from "./DemoXlsxOriginal";
+import { usePassageHighlight } from "./highlightPassage";
+import { MarkdownDocument } from "./MarkdownDocument";
 
 const BADGE: Record<string, { box: string; text: string }> = {
   PDF: { box: "bg-[#B3261E1F]", text: "text-[#B3261E]" },
@@ -22,15 +24,20 @@ export function DocumentViewer({
   name,
   load,
   onClose,
+  highlight,
 }: {
   /** Shown while the document loads. */
   name: string;
   load: (signal: AbortSignal) => Promise<DocumentOriginal>;
   onClose: () => void;
+  /** Text to highlight and scroll to: the passage an answer was retrieved from. */
+  highlight?: string;
 }) {
   const [original, setOriginal] = useState<DocumentOriginal | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const body = useRef<HTMLDivElement>(null);
+  const highlighted = usePassageHighlight(body, highlight);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -61,15 +68,15 @@ export function DocumentViewer({
       >
         <div className="self-stretch shrink-0 border-b border-[#E4E4E0] flex items-center gap-3 pt-6 pr-7 pb-5 pl-7">
           <div className={`w-10 h-10 shrink-0 rounded-[10px] flex justify-center items-center ${badge.box}`}>
-            <div className={`font-geist-mono font-bold text-[10px] leading-normal ${badge.text}`}>{type || "DOC"}</div>
+            <div className={`font-geist-mono font-bold text-[12px] leading-normal ${badge.text}`}>{type || "DOC"}</div>
           </div>
           <div className="flex-1 min-w-0 flex flex-col items-start gap-1">
-            <div className="max-w-full truncate font-gabarito font-bold text-[18px] leading-normal text-[#111111]">
+            <div className="max-w-full truncate font-gabarito font-bold text-[20px] leading-normal text-[#111111]">
               {doc?.name ?? name}
             </div>
             {original && doc && (
               <div className="flex items-center gap-2">
-                <div className="font-gabarito text-[12px] leading-normal text-[#6B6B6B]">
+                <div className="font-gabarito text-[14px] leading-normal text-[#6B6B6B]">
                   {[
                     type,
                     doc.sizeBytes !== null && formatBytes(doc.sizeBytes),
@@ -87,25 +94,30 @@ export function DocumentViewer({
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="w-10 h-10 shrink-0 rounded-full border border-border-default flex justify-center items-center text-[20px] leading-none text-ink-primary hover:bg-bg-soft cursor-pointer"
+            className="w-10 h-10 shrink-0 rounded-full border border-border-default flex justify-center items-center text-[22px] leading-none text-ink-primary hover:bg-bg-soft cursor-pointer"
           >
             ×
           </button>
         </div>
         <div className="self-stretch shrink-0 bg-[#FAFAF9] flex justify-between items-center px-7 py-3">
-          <div className="font-geist-mono font-bold text-[12px] leading-normal tracking-[0.01em] uppercase text-[#6B6B6B]">
+          <div className="font-geist-mono font-bold text-[14px] leading-normal tracking-[0.01em] uppercase text-[#6B6B6B]">
             {"Original document"}
           </div>
+          {highlighted && (
+            <div className="shrink-0 bg-[#DBEAFE] rounded-full px-3 py-1 font-gabarito font-medium text-[14px] leading-normal text-[#1E4E9C]">
+              {"The retrieved passage is highlighted"}
+            </div>
+          )}
         </div>
-        <div className="self-stretch flex-1 min-h-0 overflow-auto flex flex-col">
+        <div ref={body} className="self-stretch flex-1 min-h-0 overflow-auto flex flex-col">
           {error ? (
             <Centered>
-              <div className="font-gabarito text-[14px] text-danger-text">{error}</div>
+              <div className="font-gabarito text-[16px] text-danger-text">{error}</div>
               <Button onClick={onClose}>Close</Button>
             </Centered>
           ) : !original ? (
             <Centered>
-              <Spinner /> <span className="font-gabarito text-[14px] text-ink-secondary">Opening document…</span>
+              <Spinner /> <span className="font-gabarito text-[16px] text-ink-secondary">Opening document…</span>
             </Centered>
           ) : (
             <OriginalBody original={original} onNote={setNote} />
@@ -128,10 +140,16 @@ function OriginalBody({ original, onNote }: { original: DocumentOriginal; onNote
   if (file && document.type === "PDF") return <PdfPages file={file} onNote={onNote} />;
   if (file && document.type === "DOCX") return <DocxPage file={file} />;
   if (file && document.type === "XLSX") return <Workbook file={file} onNote={onNote} />;
+  if (original.text.trim() && document.type === "MD")
+    return (
+      <Paper>
+        <MarkdownDocument text={original.text} />
+      </Paper>
+    );
   if (original.text.trim()) return <TextPage text={original.text} />;
   return (
     <Centered>
-      <div className="font-gabarito text-[14px] text-ink-secondary">
+      <div className="font-gabarito text-[16px] text-ink-secondary">
         {document.kind === "url" ? `Web page: ${document.name}` : "The original file isn't available any more."}
       </div>
     </Centered>
@@ -152,7 +170,7 @@ function Paper({ children }: { children: ReactNode }) {
 function TextPage({ text }: { text: string }) {
   return (
     <Paper>
-      <pre className="whitespace-pre-wrap break-words font-gabarito text-[13px] leading-[20px] text-[#444444]">
+      <pre className="whitespace-pre-wrap break-words font-gabarito text-[15px] leading-[22px] text-[#444444]">
         {text}
       </pre>
     </Paper>
@@ -165,6 +183,13 @@ function PdfPages({ file, onNote }: { file: Blob; onNote: (note: string) => void
 
   useEffect(() => {
     let cancelled = false;
+    // Each page's text layer is drawn at the PDF's size, then scaled to the page's width on screen.
+    const resize = new ResizeObserver((entries) =>
+      entries.forEach(({ target }) => {
+        const layer = target.lastElementChild as HTMLElement | null;
+        if (layer) fitTextLayer(target as HTMLElement, layer, Number(layer.dataset.width));
+      }),
+    );
     (async () => {
       try {
         const pdf = await loadPdf(file);
@@ -175,10 +200,19 @@ function PdfPages({ file, onNote }: { file: Blob; onNote: (note: string) => void
           const canvas = document.createElement("canvas");
           canvas.width = viewport.width;
           canvas.height = viewport.height;
-          canvas.className =
-            "w-140 max-w-full h-auto bg-white border border-[#E4E4E0] shadow-[0px_2px_8px_0px_#0000000F]";
+          canvas.className = "block w-full h-auto";
           await page.render({ canvasContext: canvas.getContext("2d")!, viewport }).promise;
-          if (!cancelled) host.current?.appendChild(canvas);
+          const sheet = document.createElement("div");
+          sheet.className =
+            "relative w-140 max-w-full shrink-0 overflow-hidden bg-white border border-[#E4E4E0] shadow-[0px_2px_8px_0px_#0000000F]";
+          sheet.appendChild(canvas);
+          // Invisible text over the drawing, so the retrieved passage can be found and highlighted.
+          const layer = textLayer(await page.getTextContent(), viewport);
+          sheet.appendChild(layer);
+          if (cancelled) break;
+          host.current?.appendChild(sheet);
+          fitTextLayer(sheet, layer, viewport.width);
+          resize.observe(sheet);
         }
         if (!cancelled) setState("done");
       } catch {
@@ -187,6 +221,7 @@ function PdfPages({ file, onNote }: { file: Blob; onNote: (note: string) => void
     })();
     return () => {
       cancelled = true;
+      resize.disconnect();
     };
   }, [file, onNote]);
 
@@ -194,15 +229,56 @@ function PdfPages({ file, onNote }: { file: Blob; onNote: (note: string) => void
     <div className="flex-1 bg-[#F0F0EE] flex flex-col items-center gap-6 px-12 py-7">
       <div ref={host} className="contents" />
       {state === "loading" && (
-        <div className="flex items-center gap-2 font-gabarito text-[13px] text-ink-secondary">
+        <div className="flex items-center gap-2 font-gabarito text-[15px] text-ink-secondary">
           <Spinner size={14} /> Rendering pages…
         </div>
       )}
       {state === "error" && (
-        <div className="font-gabarito text-[13px] text-danger-text">This PDF couldn't be displayed.</div>
+        <div className="font-gabarito text-[15px] text-danger-text">This PDF couldn't be displayed.</div>
       )}
     </div>
   );
+}
+
+type PdfText = { items: ({ str: string; transform: number[]; width: number } | object)[] };
+type PdfViewport = { width: number; height: number; scale: number; transform: number[] };
+
+/** One transparent span per text run, placed where pdf.js draws it (a much smaller pdf.js TextLayer). */
+function textLayer(content: PdfText, viewport: PdfViewport) {
+  const layer = document.createElement("div");
+  layer.className = "pdf-text-layer";
+  layer.dataset.width = String(viewport.width);
+  layer.style.width = `${viewport.width}px`;
+  layer.style.height = `${viewport.height}px`;
+  const [a, b, c, d, e, f] = viewport.transform;
+  for (const item of content.items) {
+    if (!("str" in item) || !item.str.trim()) continue;
+    const [, , ic, id, ie, iff] = item.transform;
+    // viewport.transform × item.transform, keeping what is needed: the font height and the baseline origin.
+    const size = Math.hypot(a * ic + c * id, b * ic + d * id);
+    const x = a * ie + c * iff + e;
+    const y = b * ie + d * iff + f;
+    const span = document.createElement("span");
+    span.textContent = item.str;
+    span.style.left = `${x}px`;
+    span.style.top = `${y - size * 0.85}px`;
+    span.style.fontSize = `${size}px`;
+    // item.width is in PDF units, like the viewport's scale.
+    span.dataset.width = String(item.width * viewport.scale);
+    layer.appendChild(span);
+  }
+  return layer;
+}
+
+/** Scales the layer to the page's on-screen width, and each run to the width pdf.js gives it. */
+function fitTextLayer(sheet: HTMLElement, layer: HTMLElement, width: number) {
+  layer.style.transform = `scale(${sheet.clientWidth / width})`;
+  if (layer.dataset.fitted) return;
+  layer.dataset.fitted = "1";
+  layer.querySelectorAll<HTMLElement>("span").forEach((span) => {
+    const natural = span.offsetWidth;
+    if (natural > 0) span.style.transform = `scaleX(${Number(span.dataset.width) / natural})`;
+  });
 }
 
 function DocxPage({ file }: { file: Blob }) {
@@ -272,7 +348,7 @@ function Workbook({ file, onNote }: { file: Blob; onNote: (note: string) => void
   if (!sheets.length)
     return (
       <Centered>
-        <div className="font-gabarito text-[13px] text-danger-text">This spreadsheet couldn't be displayed.</div>
+        <div className="font-gabarito text-[15px] text-danger-text">This spreadsheet couldn't be displayed.</div>
       </Centered>
     );
   const sheet = sheets[active];
@@ -280,7 +356,7 @@ function Workbook({ file, onNote }: { file: Blob; onNote: (note: string) => void
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <div className="flex-1 min-h-0 overflow-auto">
-        <table className="border-collapse font-gabarito text-[12px] text-[#111111]">
+        <table className="border-collapse font-gabarito text-[14px] text-[#111111]">
           <thead>
             <tr>
               <th className="sticky top-0 w-10 bg-[#F5F5F3] border border-[#E4E4E0]" />
@@ -317,7 +393,7 @@ function Workbook({ file, onNote }: { file: Blob; onNote: (note: string) => void
             key={s.name}
             type="button"
             onClick={() => setActive(i)}
-            className={`rounded-[6px] px-3 py-1 font-gabarito text-[12px] cursor-pointer ${
+            className={`rounded-[6px] px-3 py-1 font-gabarito text-[14px] cursor-pointer ${
               i === active ? "bg-white border border-[#E4E4E0] font-bold text-[#111111]" : "text-[#6B6B6B]"
             }`}
           >

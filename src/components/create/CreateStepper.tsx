@@ -38,7 +38,7 @@ export function CreateStepper({ current }: { current: 1 | 2 | 3 | 4 }) {
                 <img className="w-8 h-8 shrink-0" src="icons/number.svg" alt="" />
               ) : (
                 <div
-                  className={`w-8 h-8 shrink-0 rounded-[20px] flex justify-center items-center font-gabarito font-medium text-[14px] leading-[20px] ${
+                  className={`w-8 h-8 shrink-0 rounded-[20px] flex justify-center items-center font-gabarito font-medium text-[16px] leading-[22px] ${
                     state === "current"
                       ? "bg-bg-inverse text-ink-on-dark"
                       : "bg-bg-card border border-border-dashed text-ink-secondary"
@@ -49,7 +49,7 @@ export function CreateStepper({ current }: { current: 1 | 2 | 3 | 4 }) {
               )}
               <div className="flex flex-col items-start">
                 <div
-                  className={`font-gabarito font-medium text-[11px] leading-[16px] tracking-[2.4px] uppercase ${state === "done" ? "text-success-text" : "text-ink-secondary"}`}
+                  className={`font-gabarito font-medium text-[13px] leading-[18px] tracking-[2.4px] uppercase ${state === "done" ? "text-success-text" : "text-ink-secondary"}`}
                 >
                   {state === "done"
                     ? `Step ${step.n} · Done`
@@ -58,11 +58,11 @@ export function CreateStepper({ current }: { current: 1 | 2 | 3 | 4 }) {
                       : `Step ${step.n}`}
                 </div>
                 <div
-                  className={`font-gabarito font-bold text-[16px] leading-[24px] ${state === "upcoming" ? "text-ink-secondary" : "text-ink-primary"}`}
+                  className={`font-gabarito font-bold text-[18px] leading-[26px] ${state === "upcoming" ? "text-ink-secondary" : "text-ink-primary"}`}
                 >
                   {step.title}
                 </div>
-                <div className="font-gabarito text-[12px] leading-[16px] text-ink-secondary">{step.subtitle}</div>
+                <div className="font-gabarito text-[14px] leading-[18px] text-ink-secondary">{step.subtitle}</div>
               </div>
             </div>
           </button>

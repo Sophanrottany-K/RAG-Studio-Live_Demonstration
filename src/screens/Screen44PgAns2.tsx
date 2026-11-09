@@ -17,11 +17,11 @@ export default function Screen44PgAns2() {
         <div className="self-stretch h-16 shrink-0 bg-bg-card border-b border-border-default flex justify-between items-center px-6">
           <div className="shrink-0 flex flex-col items-start gap-0.5 cursor-pointer" onClick={go("/pg2")}>
             <div className="shrink-0 flex items-center gap-2">
-              <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[18px] leading-[28px] text-ink-primary">
+              <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[20px] leading-[30px] text-ink-primary">
                 {"Playground"}
               </div>
             </div>
-            <div className="shrink-0 whitespace-pre font-gabarito text-[12px] leading-[16px] text-ink-secondary">
+            <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[18px] text-ink-secondary">
               {"Test how your chatbot answers before you publish."}
             </div>
           </div>
@@ -35,7 +35,7 @@ export default function Screen44PgAns2() {
             <div className="self-stretch flex-1 min-h-0 overflow-y-auto flex flex-col items-start gap-5 p-7">
               <div className="self-stretch shrink-0 overflow-hidden flex justify-end items-start">
                 <div className="shrink-0 bg-[#111111] rounded-[20px] overflow-hidden flex flex-col items-start px-4.5 py-3">
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-normal text-[#FFFFFF]">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-normal text-[#FFFFFF]">
                     {"Do you offer student discounts?"}
                   </div>
                 </div>
@@ -43,50 +43,50 @@ export default function Screen44PgAns2() {
               <div className="self-stretch shrink-0 flex flex-col items-start gap-3.5">
                 <Head />
                 <div className="w-190 shrink-0 overflow-hidden flex flex-wrap items-center gap-x-1 gap-y-0.5">
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"Yes. Students get 20% off any monthly"}
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"or annual plan."}
                   </div>
                   <div className="shrink-0 min-w-5 bg-bg-surface border border-border-hairline/10 rounded-[4px] flex justify-center items-center px-[5px] py-0.5">
-                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[11px] leading-[14px] text-ink-default">
+                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[13px] leading-[16px] text-ink-default">
                       {"1"}
                     </div>
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"Verify with a valid student email at"}
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"checkout or in Billing settings."}
                   </div>
                   <div className="shrink-0 min-w-5 bg-bg-surface border border-border-hairline/10 rounded-[4px] flex justify-center items-center px-[5px] py-0.5">
-                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[11px] leading-[14px] text-ink-default">
+                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[13px] leading-[16px] text-ink-default">
                       {"3"}
                     </div>
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"The discount renews every year while"}
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"your student status stays"}
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-[24px] text-ink-body-2">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-[26px] text-ink-body-2">
                     {"verified."}
                   </div>
                   <div className="shrink-0 min-w-5 bg-bg-surface border border-border-hairline/10 rounded-[4px] flex justify-center items-center px-[5px] py-0.5">
-                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[11px] leading-[14px] text-ink-default">
+                    <div className="shrink-0 whitespace-pre text-center font-jet-brains-mono font-bold text-[13px] leading-[16px] text-ink-default">
                       {"2"}
                     </div>
                   </div>
                 </div>
                 <div className="shrink-0 overflow-hidden flex items-center gap-2.5">
                   <div className="shrink-0 bg-bg-card border border-border-default rounded-full flex justify-center items-center gap-2 px-4 py-3">
-                    <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[14px] leading-[16px] text-ink-primary">
+                    <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[16px] leading-[18px] text-ink-primary">
                       {"View retrieved sources (3)"}
                     </div>
                   </div>
-                  <div className="shrink-0 whitespace-pre font-gabarito text-[12px] leading-normal text-[#6B6B6B]">
+                  <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-normal text-[#6B6B6B]">
                     {"GPT-4o mini · 1.8s"}
                   </div>
                 </div>

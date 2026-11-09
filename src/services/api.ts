@@ -120,6 +120,16 @@ function upload(file: File, onProgress: (fraction: number) => void, signal?: Abo
   });
 }
 
+/** The widget's site, plus the settings from its embed code (see `getWidgetChat`). */
+function widgetQuery(host: string, embed?: Partial<WidgetEmbed>) {
+  const query = new URLSearchParams({ host });
+  if (embed?.primaryColor) query.set("color", embed.primaryColor);
+  if (embed?.position) query.set("position", embed.position);
+  if (embed?.welcomeMessage) query.set("welcome", embed.welcomeMessage);
+  if (embed?.allowedDomains?.length) query.set("domains", embed.allowedDomains.join(","));
+  return query;
+}
+
 /** Document metadata comes as JSON; the original file is a separate download. */
 async function original(path: string, signal?: AbortSignal): Promise<DocumentOriginal> {
   if (!BASE_URL) return mockRequest<DocumentOriginal>("GET", path, undefined, signal);
@@ -164,13 +174,15 @@ export const api = {
     request<ChatAnswer>("POST", `/public/${token}/chat`, { question }, signal),
   /** `embed`: the settings in the embed code, used when the widget's own storage has none (another site). */
   getWidgetChat: (chatbotId: string, host: string, signal?: AbortSignal, embed?: Partial<WidgetEmbed>) => {
-    const query = new URLSearchParams({ host });
-    if (embed?.primaryColor) query.set("color", embed.primaryColor);
-    if (embed?.position) query.set("position", embed.position);
-    if (embed?.welcomeMessage) query.set("welcome", embed.welcomeMessage);
-    if (embed?.allowedDomains?.length) query.set("domains", embed.allowedDomains.join(","));
-    return request<WidgetChat>("GET", `/widget/${chatbotId}?${query}`, undefined, signal);
+    return request<WidgetChat>("GET", `/widget/${chatbotId}?${widgetQuery(host, embed)}`, undefined, signal);
   },
+  getWidgetDocumentOriginal: (
+    chatbotId: string,
+    host: string,
+    docId: string,
+    signal?: AbortSignal,
+    embed?: Partial<WidgetEmbed>,
+  ) => original(`/widget/${chatbotId}/documents/${docId}/original?${widgetQuery(host, embed)}`, signal),
   askWidget: (chatbotId: string, host: string, question: string, signal?: AbortSignal, embed?: Partial<WidgetEmbed>) =>
     request<ChatAnswer>("POST", `/widget/${chatbotId}/chat`, { question, host, embed }, signal),
 

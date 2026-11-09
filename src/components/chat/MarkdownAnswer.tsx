@@ -42,17 +42,17 @@ export function MarkdownAnswer({ markdown }: { markdown: string }) {
     .split(/\n{2,}/)
     .filter(Boolean);
   return (
-    <div className="max-w-[85%] flex flex-col items-start gap-3 font-gabarito text-[15px] leading-[24px] text-ink-body-2 [overflow-wrap:anywhere]">
+    <div className="max-w-[85%] flex flex-col items-start gap-3 font-gabarito text-[17px] leading-[26px] text-ink-body-2 [overflow-wrap:anywhere]">
       {blocks.map((block, i) => {
         if (block.startsWith("### "))
           return (
-            <h4 key={i} className="pt-1 font-bold text-[15px] text-[#111111]">
+            <h4 key={i} className="pt-1 font-bold text-[17px] text-[#111111]">
               {fadingWords(block.slice(4))}
             </h4>
           );
         if (block.startsWith("## "))
           return (
-            <h3 key={i} className="pt-2 first:pt-0 font-bold text-[18px] text-[#111111]">
+            <h3 key={i} className="pt-2 first:pt-0 font-bold text-[20px] text-[#111111]">
               {fadingWords(block.slice(3))}
             </h3>
           );

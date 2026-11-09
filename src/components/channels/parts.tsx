@@ -47,11 +47,11 @@ export function ChannelCard({
       <div className="self-stretch flex items-center gap-4">
         <img className="w-12 h-12 shrink-0" src={icon} alt="" />
         <div className="flex-1 min-w-0 flex flex-col items-start gap-1">
-          <h3 className="font-gabarito font-bold text-[20px] leading-normal text-ink-primary">{title}</h3>
-          <div className="font-gabarito text-[13px] leading-normal text-ink-secondary">{subtitle}</div>
+          <h3 className="font-gabarito font-bold text-[22px] leading-normal text-ink-primary">{title}</h3>
+          <div className="font-gabarito text-[15px] leading-normal text-ink-secondary">{subtitle}</div>
         </div>
         <span
-          className={`shrink-0 rounded-full flex items-center gap-1.5 px-3 py-[5px] font-gabarito font-medium text-[12px] ${style.box}`}
+          className={`shrink-0 rounded-full flex items-center gap-1.5 px-3 py-[5px] font-gabarito font-medium text-[14px] ${style.box}`}
         >
           <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
           {style.label}
@@ -82,7 +82,7 @@ export function ChannelCard({
 
 export function SubTitle({ children }: { children: ReactNode }) {
   return (
-    <div className="font-gabarito font-bold text-[12px] leading-normal tracking-[0.08em] uppercase text-ink-muted">
+    <div className="font-gabarito font-bold text-[14px] leading-normal tracking-[0.08em] uppercase text-ink-muted">
       {children}
     </div>
   );

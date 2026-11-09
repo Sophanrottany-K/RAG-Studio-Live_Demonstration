@@ -71,8 +71,8 @@ body {
 /* Word documents rendered by the original-document viewer (HTML produced by mammoth). */
 .docx-original {
   font-family: var(--font-gabarito), sans-serif;
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 15px;
+  line-height: 22px;
   color: #444444;
 }
 .docx-original h1,
@@ -83,11 +83,11 @@ body {
   margin: 14px 0 6px;
 }
 .docx-original h1 {
-  font-size: 22px;
-  line-height: 28px;
+  font-size: 24px;
+  line-height: 30px;
 }
 .docx-original h2 {
-  font-size: 16px;
+  font-size: 18px;
 }
 .docx-original p {
   margin: 0 0 10px;
@@ -185,59 +185,59 @@ html[data-sidebar="collapsed"] {
   --shadow-subtle: 0 1px 3px rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
   --shadow-elevated: 0 5px 20px rgb(17 17 17 / 0.1), 0 1px 6px rgb(17 17 17 / 0.04);
 
-  --text-h1: 3rem;
-  --text-h1--line-height: 3.625rem;
+  --text-h1: 3.125rem;
+  --text-h1--line-height: 3.75rem;
   --text-h1--font-weight: 700;
   --text-h1--letter-spacing: -0.03em;
-  --text-h2: 2.5rem;
-  --text-h2--line-height: 3rem;
+  --text-h2: 2.625rem;
+  --text-h2--line-height: 3.125rem;
   --text-h2--font-weight: 700;
   --text-h2--letter-spacing: -0.03em;
-  --text-h3: 2rem;
-  --text-h3--line-height: 2.375rem;
+  --text-h3: 2.125rem;
+  --text-h3--line-height: 2.5rem;
   --text-h3--font-weight: 700;
   --text-h3--letter-spacing: -0.03em;
-  --text-h4: 1.75rem;
-  --text-h4--line-height: 2.125rem;
+  --text-h4: 1.875rem;
+  --text-h4--line-height: 2.25rem;
   --text-h4--font-weight: 700;
   --text-h4--letter-spacing: -0.02em;
-  --text-h5: 1.5rem;
-  --text-h5--line-height: 1.75rem;
+  --text-h5: 1.625rem;
+  --text-h5--line-height: 1.875rem;
   --text-h5--font-weight: 700;
   --text-h5--letter-spacing: -0.02em;
-  --text-s1: 1.125rem;
-  --text-s1--line-height: 1.75rem;
+  --text-s1: 1.25rem;
+  --text-s1--line-height: 1.875rem;
   --text-s1--font-weight: 700;
-  --text-s2: 1rem;
-  --text-s2--line-height: 1.5rem;
+  --text-s2: 1.125rem;
+  --text-s2--line-height: 1.625rem;
   --text-s2--font-weight: 700;
-  --text-p1: 1rem;
-  --text-p1--line-height: 1.5rem;
-  --text-p2: 1rem;
-  --text-p2--line-height: 1.5rem;
+  --text-p1: 1.125rem;
+  --text-p1--line-height: 1.625rem;
+  --text-p2: 1.125rem;
+  --text-p2--line-height: 1.625rem;
   --text-p2--font-weight: 500;
-  --text-p3: 0.875rem;
-  --text-p3--line-height: 1.25rem;
-  --text-p4: 0.875rem;
-  --text-p4--line-height: 1.25rem;
+  --text-p3: 1rem;
+  --text-p3--line-height: 1.375rem;
+  --text-p4: 1rem;
+  --text-p4--line-height: 1.375rem;
   --text-p4--font-weight: 500;
-  --text-c1: 0.75rem;
-  --text-c1--line-height: 1rem;
-  --text-c2: 0.75rem;
-  --text-c2--line-height: 1rem;
+  --text-c1: 0.875rem;
+  --text-c1--line-height: 1.125rem;
+  --text-c2: 0.875rem;
+  --text-c2--line-height: 1.125rem;
   --text-c2--font-weight: 500;
-  --text-c3: 0.625rem;
-  --text-c3--line-height: 0.875rem;
+  --text-c3: 0.75rem;
+  --text-c3--line-height: 1rem;
   --text-c3--font-weight: 500;
-  --text-eyebrow: 0.6875rem;
-  --text-eyebrow--line-height: 1rem;
+  --text-eyebrow: 0.8125rem;
+  --text-eyebrow--line-height: 1.125rem;
   --text-eyebrow--font-weight: 500;
   --text-eyebrow--letter-spacing: 0.16em;
-  --text-btn-md: 1rem;
-  --text-btn-md--line-height: 1.25rem;
+  --text-btn-md: 1.125rem;
+  --text-btn-md--line-height: 1.375rem;
   --text-btn-md--font-weight: 700;
-  --text-btn-sm: 0.875rem;
-  --text-btn-sm--line-height: 1rem;
+  --text-btn-sm: 1rem;
+  --text-btn-sm--line-height: 1.125rem;
   --text-btn-sm--font-weight: 700;
 }
 
@@ -300,4 +300,32 @@ html[data-sidebar="collapsed"] {
   to {
     opacity: 1;
   }
+}
+/* Source viewer: the passage a chat answer was retrieved from (see highlightPassage.ts). A soft blue; the text
+   keeps the document's own color. */
+::highlight(rag-passage) {
+  background-color: #dbeafe;
+}
+
+/* Invisible text over a rendered PDF page, so its passages can be found and highlighted. */
+.pdf-text-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  line-height: 1;
+  /* Like a marker: the highlight tints the page without hiding the drawn text under it. */
+  mix-blend-mode: multiply;
+}
+
+.pdf-text-layer span {
+  position: absolute;
+  white-space: pre;
+  color: transparent;
+  font-family: sans-serif;
+  transform-origin: 0 0;
+}
+
+.pdf-text-layer span::highlight(rag-passage) {
+  color: transparent;
 }

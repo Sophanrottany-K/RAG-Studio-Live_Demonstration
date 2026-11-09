@@ -48,7 +48,7 @@ export function Toaster() {
           ) : (
             <CircleCheck aria-hidden className="text-success-text mt-px size-5 shrink-0" />
           )}
-          <p className="min-w-0 flex-1 text-[14px] leading-normal text-[#111111]">{t.text}</p>
+          <p className="min-w-0 flex-1 text-[16px] leading-normal text-[#111111]">{t.text}</p>
           <button
             type="button"
             aria-label="Dismiss"

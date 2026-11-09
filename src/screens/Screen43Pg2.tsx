@@ -24,25 +24,25 @@ export default function Screen43Pg2() {
           <PlaygroundHeader />
           <div className="self-stretch flex-1 min-h-0 bg-[#FFFFFF] border border-[#E4E4E0] rounded-[20px] overflow-hidden flex flex-col items-start">
             <div className="self-stretch flex-1 min-h-0 overflow-y-auto flex flex-col justify-center items-center gap-3 p-7">
-              <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[24px] leading-normal text-[#111111]">
+              <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[26px] leading-normal text-[#111111]">
                 {"Ask a question to start testing"}
               </div>
-              <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-normal text-[#6B6B6B]">
+              <div className="shrink-0 whitespace-pre font-gabarito text-[17px] leading-normal text-[#6B6B6B]">
                 {"Answers come only from this chatbot’s knowledge base, with citations."}
               </div>
               <div className="shrink-0 overflow-hidden flex items-start gap-2.5 pt-3">
                 <div className="shrink-0 bg-[#FFFFFF] border border-[#E4E4E0] rounded-full overflow-hidden flex items-start px-4 py-2.5">
-                  <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[14px] leading-normal text-[#444444]">
+                  <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[16px] leading-normal text-[#444444]">
                     {"What is the refund policy?"}
                   </div>
                 </div>
                 <div className="shrink-0 bg-[#FFFFFF] border border-[#E4E4E0] rounded-full overflow-hidden flex items-start px-4 py-2.5">
-                  <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[14px] leading-normal text-[#444444]">
+                  <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[16px] leading-normal text-[#444444]">
                     {"How do I reset my password?"}
                   </div>
                 </div>
                 <div className="shrink-0 bg-[#FFFFFF] border border-[#E4E4E0] rounded-full overflow-hidden flex items-start px-4 py-2.5">
-                  <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[14px] leading-normal text-[#444444]">
+                  <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[16px] leading-normal text-[#444444]">
                     {"What plans do you offer?"}
                   </div>
                 </div>

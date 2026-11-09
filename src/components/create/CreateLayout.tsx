@@ -40,8 +40,8 @@ export function CreateLayout({
 export function StepHeading({ title, subtitle }: { title: string; subtitle: ReactNode }) {
   return (
     <div className="self-stretch shrink-0 flex flex-col items-start gap-1.5">
-      <h1 className="font-gabarito font-bold text-[24px] leading-[28px] text-ink-primary">{title}</h1>
-      <div className="self-stretch font-gabarito text-[14px] leading-[20px] text-ink-secondary">{subtitle}</div>
+      <h1 className="font-gabarito font-bold text-[26px] leading-[30px] text-ink-primary">{title}</h1>
+      <div className="self-stretch font-gabarito text-[16px] leading-[22px] text-ink-secondary">{subtitle}</div>
     </div>
   );
 }

@@ -31,15 +31,15 @@ export default function Screen40KbDrop() {
                 <div className="self-stretch shrink-0 flex items-start gap-5">
                   <div className="flex-1 min-w-0 self-stretch bg-[#FFFFFF] border border-[#E4E4E0] rounded-[16px] flex flex-col items-start gap-4 p-7">
                     <div className="shrink-0 flex flex-col items-start gap-1">
-                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[18px] leading-normal text-[#111111]">{"Upload documents"}</div>
-                      <div className="shrink-0 whitespace-pre font-gabarito text-[13px] leading-normal text-[#6B6B6B]">{"PDF, DOCX, TXT, MD, XLSX · up to 20 MB per file"}</div>
+                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[20px] leading-normal text-[#111111]">{"Upload documents"}</div>
+                      <div className="shrink-0 whitespace-pre font-gabarito text-[15px] leading-normal text-[#6B6B6B]">{"PDF, DOCX, TXT, MD, XLSX · up to 20 MB per file"}</div>
                     </div>
                     <div className="self-stretch shrink-0 bg-[#5B3FC40F] border-[2px] border-[#5B3FC4] border-dashed rounded-[14px] flex flex-col items-center gap-2.5 px-6 py-7">
                       <img className="w-12 h-12 shrink-0" src="icons/frame-11.svg" alt="" />
                       <div className="shrink-0 flex items-start gap-1">
-                        <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[14px] leading-normal text-[#5B3FC4]">{"Drop 1 file to upload"}</div>
+                        <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[16px] leading-normal text-[#5B3FC4]">{"Drop 1 file to upload"}</div>
                       </div>
-                      <div className="shrink-0 whitespace-pre font-gabarito text-[12px] leading-normal text-[#8A8A86]">{"Student discount policy.pdf"}</div>
+                      <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-normal text-[#8A8A86]">{"Student discount policy.pdf"}</div>
                     </div>
                   </div>
                   <ImportWebPages />

@@ -6,7 +6,8 @@
  *     data-welcome="…" data-domains="…" async></script>
  *
  * It adds one small iframe in the bottom corner. The iframe is a RAG Studio page (#/w/<chatbotId>) that draws the
- * chat bubble and the chat window, and tells this script when to grow (open) or shrink (closed) the frame.
+ * chat bubble and the chat window, and tells this script when to grow (open) or shrink (closed) the frame, or to
+ * cover the page while the visitor reads a source document (source).
  */
 (function () {
   var script = document.currentScript;
@@ -69,8 +70,19 @@
       return;
     }
     lastReason = null;
-    var size = data.state === "open" ? OPEN : CLOSED;
     frame.style.display = "block";
+    // A source document opens beside the chat, over the whole page (click outside it to close it).
+    if (data.state === "source") {
+      frame.style.top = frame.style.left = frame.style.right = frame.style.bottom = "0";
+      frame.style.width = frame.style.height = "100%";
+      frame.style.maxWidth = frame.style.maxHeight = "none";
+      return;
+    }
+    var size = data.state === "open" ? OPEN : CLOSED;
+    frame.style.top = "auto";
+    frame.style.bottom = "8px";
+    frame.style.maxWidth = "calc(100vw - 16px)";
+    frame.style.maxHeight = "calc(100vh - 16px)";
     frame.style.width = size.width + "px";
     frame.style.height = size.height + "px";
     frame.style.left = data.position === "bottom-left" ? "8px" : "auto";

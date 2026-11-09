@@ -45,18 +45,18 @@ export default function Screen19Pg() {
             className="shrink-0 rounded-[8px] flex items-center gap-2 pt-1.5 pr-2.5 pb-1.5 pl-2 cursor-pointer hover:bg-bg-soft"
           >
             <img className="w-4 h-4 shrink-0" src="icons/arrow-left-property-linear.svg" alt="" />
-            <span className="font-gabarito text-[14px] leading-[20px] text-ink-secondary">{"Chatbots"}</span>
-            <span className="font-gabarito text-[14px] leading-[20px] text-ink-muted">{"/"}</span>
-            <span className="font-gabarito text-[14px] leading-[20px] text-[#6B6B6B]">{"Test Playground"}</span>
-            <span className="font-gabarito text-[14px] leading-[20px] text-ink-muted">{"/"}</span>
-            <span className="font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">
+            <span className="font-gabarito text-[16px] leading-[22px] text-ink-secondary">{"Chatbots"}</span>
+            <span className="font-gabarito text-[16px] leading-[22px] text-ink-muted">{"/"}</span>
+            <span className="font-gabarito text-[16px] leading-[22px] text-[#6B6B6B]">{"Test Playground"}</span>
+            <span className="font-gabarito text-[16px] leading-[22px] text-ink-muted">{"/"}</span>
+            <span className="font-gabarito font-medium text-[16px] leading-[22px] text-ink-primary">
               {bot?.name ?? "…"}
             </span>
           </button>
           <div className="w-115 shrink-0 flex flex-col items-start gap-1.5">
             <label
               htmlFor="playground-bot"
-              className="font-gabarito font-medium text-[14px] leading-normal text-[#111111]"
+              className="font-gabarito font-medium text-[16px] leading-normal text-[#111111]"
             >
               {"Selected chatbot"}
             </label>
@@ -77,22 +77,22 @@ export default function Screen19Pg() {
           {error && <Banner tone="danger">{error}</Banner>}
           {!bot ? (
             !error && (
-              <div className="self-stretch flex items-center justify-center gap-3 py-10 font-gabarito text-[14px] text-ink-secondary">
+              <div className="self-stretch flex items-center justify-center gap-3 py-10 font-gabarito text-[16px] text-ink-secondary">
                 <Spinner /> Loading…
               </div>
             )
           ) : (
             <>
               <div className="self-stretch shrink-0 bg-[#FFFFFF] border border-[#E4E4E0] rounded-[20px] flex items-center gap-5 p-6">
-                <div className="w-14 h-14 shrink-0 bg-[#111111] rounded-[16px] flex justify-center items-center font-gabarito font-bold text-[18px] text-[#FFFFFF]">
+                <div className="w-14 h-14 shrink-0 bg-[#111111] rounded-[16px] flex justify-center items-center font-gabarito font-bold text-[20px] text-[#FFFFFF]">
                   {initials(bot.name)}
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col items-start gap-1.5">
                   <div className="flex items-center gap-2.5">
-                    <div className="font-gabarito font-bold text-[24px] leading-normal text-[#111111]">{bot.name}</div>
+                    <div className="font-gabarito font-bold text-[26px] leading-normal text-[#111111]">{bot.name}</div>
                     <ChatbotStatusPill status={bot.status} />
                   </div>
-                  <div className="font-gabarito text-[14px] leading-normal text-[#6B6B6B]">
+                  <div className="font-gabarito text-[16px] leading-normal text-[#6B6B6B]">
                     {`Uses this chatbot's saved settings · ${readyDocs} document${readyDocs === 1 ? "" : "s"} ready · Playground messages aren't counted in analytics`}
                   </div>
                 </div>
@@ -124,6 +124,7 @@ export default function Screen19Pg() {
         <DocumentViewer
           name={viewing.name}
           load={(signal) => api.getDocumentOriginal(bot.id, viewing.documentId, signal)}
+          highlight={viewing.passage ?? viewing.snippet}
           onClose={() => setViewing(null)}
         />
       )}

@@ -31,6 +31,13 @@ type Row = {
   id: string;
 };
 
+/** Channel names as the API lists them, mapped to their grey icons (no background tile). */
+const CHANNEL_ICONS: Record<string, string> = {
+  "Public link": "icons/channel-mark-link.svg",
+  "Web widget": "icons/channel-mark-widget.svg",
+  Telegram: "icons/channel-mark-telegram.svg",
+};
+
 const toRow = (bot: Chatbot): Row => ({
   key: bot.id,
   id: bot.id,
@@ -107,7 +114,7 @@ export function CreatedChatbotRows({
   return (
     <>
       {loaded && !shown && (
-        <div className="self-stretch h-18 shrink-0 bg-[#FFFFFF] border-b border-[#E4E4E0] flex justify-center items-center font-gabarito text-[14px] leading-[20px] text-[#6B6B6B]">
+        <div className="self-stretch h-18 shrink-0 bg-[#FFFFFF] border-b border-[#E4E4E0] flex justify-center items-center font-gabarito text-[16px] leading-[22px] text-[#6B6B6B]">
           {"No chatbots match your search or filter"}
         </div>
       )}
@@ -121,24 +128,24 @@ export function CreatedChatbotRows({
             className="self-stretch h-18 shrink-0 bg-[#FFFFFF] border-b border-[#E4E4E0] flex items-center gap-5 px-4 py-3.5 cursor-pointer hover:bg-bg-page"
           >
             <div className="flex-1 min-w-0 flex flex-col items-start gap-0.5">
-              <div className="max-w-full truncate font-gabarito font-bold text-[14px] leading-[20px] text-[#111111]">
+              <div className="max-w-full truncate font-gabarito font-bold text-[16px] leading-[22px] text-[#111111]">
                 {row.name}
               </div>
-              <div className="max-w-full truncate font-gabarito text-[12px] leading-[16px] text-[#6B6B6B]">
+              <div className="max-w-full truncate font-gabarito text-[14px] leading-[18px] text-[#6B6B6B]">
                 {row.description || "No description"}
               </div>
             </div>
             <div className="w-37.5 shrink-0 flex items-center">
               <div
-                className={`w-24 border rounded-[99px] flex justify-center items-center px-2.5 py-1 font-geist-mono font-bold text-[11px] leading-[16px] tracking-[0.01em] uppercase ${pill.className}`}
+                className={`w-24 border rounded-[99px] flex justify-center items-center px-2.5 py-1 font-geist-mono font-bold text-[13px] leading-[18px] tracking-[0.01em] uppercase ${pill.className}`}
               >
                 {pill.label}
               </div>
             </div>
             <div className="w-47.5 shrink-0 flex flex-col items-start gap-1.5">
               <div className="flex items-center gap-1.5">
-                <div className="font-gabarito font-medium text-[14px] leading-[20px] text-[#111111]">{`${total} doc${total === 1 ? "" : "s"}`}</div>
-                <div className="font-gabarito text-[12px] leading-[16px] text-[#8A8A86]">
+                <div className="font-gabarito font-medium text-[16px] leading-[22px] text-[#111111]">{`${total} doc${total === 1 ? "" : "s"}`}</div>
+                <div className="font-gabarito text-[14px] leading-[18px] text-[#8A8A86]">
                   {!total ? "Add documents" : ready === total ? "All ready" : `${ready} of ${total} ready`}
                 </div>
               </div>
@@ -149,18 +156,30 @@ export function CreatedChatbotRows({
                 />
               </div>
             </div>
-            <div
-              className={`w-37.5 shrink-0 truncate font-gabarito text-[12px] leading-[16px] ${row.channels.length ? "text-[#111111]" : "text-[#9A9A96]"}`}
-            >
-              {row.channels.length ? row.channels.join(" · ") : "Not connected"}
-            </div>
-            <div className="w-27.5 shrink-0 text-right font-gabarito font-medium text-[14px] leading-[20px] text-[#111111]">
+            {row.channels.length ? (
+              <div className="w-37.5 shrink-0 flex items-center gap-2.5">
+                {row.channels.map((channel) => (
+                  <img
+                    key={channel}
+                    className="w-5.5 h-5.5 shrink-0"
+                    src={CHANNEL_ICONS[channel] ?? "icons/channel-mark-link.svg"}
+                    alt={channel}
+                    title={channel}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="w-37.5 shrink-0 truncate font-gabarito text-[14px] leading-[18px] text-[#9A9A96]">
+                {"Not connected"}
+              </div>
+            )}
+            <div className="w-27.5 shrink-0 text-right font-gabarito font-medium text-[16px] leading-[22px] text-[#111111]">
               {row.messages}
             </div>
-            <div className="w-32.5 shrink-0 font-gabarito font-medium text-[13px] leading-[16px] text-[#444444]">
+            <div className="w-32.5 shrink-0 font-gabarito font-medium text-[15px] leading-[18px] text-[#444444]">
               {row.created}
             </div>
-            <div className="w-32.5 shrink-0 font-gabarito font-medium text-[13px] leading-[16px] text-[#444444]">
+            <div className="w-32.5 shrink-0 font-gabarito font-medium text-[15px] leading-[18px] text-[#444444]">
               {row.updated}
             </div>
           </div>

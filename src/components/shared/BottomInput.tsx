@@ -11,7 +11,7 @@ export function BottomInput() {
           value={value}
           onChange={(event) => setValue(event.target.value)}
           placeholder="Ask Billing Assistant or search official documents…"
-          className="flex-1 min-w-0 bg-transparent border-0 px-0 py-0 font-gabarito text-[16px] leading-[24px] text-ink-primary placeholder:text-ink-muted focus:outline-none"
+          className="flex-1 min-w-0 bg-transparent border-0 px-0 py-0 font-gabarito text-[18px] leading-[26px] text-ink-primary placeholder:text-ink-muted focus:outline-none"
         />
         <img className="w-14 h-14 shrink-0" src="icons/app-icon-button-secondary-circle-lg.svg" alt="" />
         <button
@@ -24,7 +24,7 @@ export function BottomInput() {
       </div>
       <div className="shrink-0 flex items-center gap-1.5">
         <img className="w-3 h-3 shrink-0" src="icons/lock-property-linear-2.svg" alt="" />
-        <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[12px] leading-[16px] text-ink-muted">{"Answers are generated only from official billing documents.  •  Powered by RAG Studio"}</div>
+        <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[14px] leading-[18px] text-ink-muted">{"Answers are generated only from official billing documents.  •  Powered by RAG Studio"}</div>
       </div>
     </div>
   );

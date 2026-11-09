@@ -93,16 +93,16 @@ export default function Screen46Guest() {
         <div className="self-stretch shrink-0 bg-bg-card border-b border-border-default flex justify-between items-center px-14 py-5">
           <div className="flex items-center gap-4">
             <div
-              className="w-12 h-12 shrink-0 rounded-[12px] flex justify-center items-center font-gabarito font-bold text-[18px] text-ink-on-dark"
+              className="w-12 h-12 shrink-0 rounded-[12px] flex justify-center items-center font-gabarito font-bold text-[20px] text-ink-on-dark"
               style={{ background: accent }}
             >
               {chat ? initials(chat.chatbotName) : "·"}
             </div>
             <div className="flex flex-col items-start">
-              <div className="font-gabarito font-bold text-[18px] leading-[28px] text-ink-primary">
+              <div className="font-gabarito font-bold text-[20px] leading-[30px] text-ink-primary">
                 {chat?.title ?? " "}
               </div>
-              <div className="font-gabarito text-[14px] leading-[20px] text-ink-secondary">
+              <div className="font-gabarito text-[16px] leading-[22px] text-ink-secondary">
                 {"Public chat  •  Answers come only from official documents"}
               </div>
             </div>
@@ -114,16 +114,16 @@ export default function Screen46Guest() {
             {error ? (
               <>
                 <img className="w-18 h-18 shrink-0" src="icons/status-icon.svg" alt="" />
-                <div className="font-gabarito font-bold text-[32px] leading-[40px] text-ink-strong">
+                <div className="font-gabarito font-bold text-[34px] leading-[42px] text-ink-strong">
                   {error.notFound ? "This link doesn't work" : "Something went wrong"}
                 </div>
-                <div className="max-w-140 font-gabarito text-[15px] leading-[24px] text-ink-subtle">
+                <div className="max-w-140 font-gabarito text-[17px] leading-[26px] text-ink-subtle">
                   {error.message}
                 </div>
                 {!error.notFound && <Button onClick={() => setAttempt((n) => n + 1)}>Try again</Button>}
               </>
             ) : (
-              <div className="flex items-center gap-3 font-gabarito text-[14px] text-ink-secondary">
+              <div className="flex items-center gap-3 font-gabarito text-[16px] text-ink-secondary">
                 <Spinner /> Loading chat…
               </div>
             )}
@@ -131,10 +131,10 @@ export default function Screen46Guest() {
         ) : unavailable ? (
           <div className="self-stretch flex-1 min-h-0 flex flex-col justify-center items-center gap-5 px-10 text-center">
             <img className="w-18 h-18 shrink-0" src="icons/status-icon.svg" alt="" />
-            <div className="font-gabarito font-bold text-[36px] leading-[40px] text-ink-strong">
+            <div className="font-gabarito font-bold text-[38px] leading-[42px] text-ink-strong">
               {unavailable.title}
             </div>
-            <div className="max-w-190 font-gabarito text-[15px] leading-[24px] text-ink-subtle">{unavailable.body}</div>
+            <div className="max-w-190 font-gabarito text-[17px] leading-[26px] text-ink-subtle">{unavailable.body}</div>
             <Button onClick={() => setAttempt((n) => n + 1)}>Check again</Button>
           </div>
         ) : (
@@ -164,7 +164,7 @@ export default function Screen46Guest() {
             footer={
               <div className="flex items-center gap-1.5">
                 <img className="w-3 h-3 shrink-0" src="icons/lock-property-linear-2.svg" alt="" />
-                <div className="font-gabarito font-medium text-[12px] leading-[16px] text-ink-muted">
+                <div className="font-gabarito font-medium text-[14px] leading-[18px] text-ink-muted">
                   {"Answers are generated only from official documents.  •  Powered by RAG Studio"}
                 </div>
               </div>
@@ -176,6 +176,7 @@ export default function Screen46Guest() {
         <DocumentViewer
           name={viewing.name}
           load={(signal) => api.getPublicDocumentOriginal(token, viewing.documentId, signal)}
+          highlight={viewing.passage ?? viewing.snippet}
           onClose={() => setViewing(null)}
         />
       )}

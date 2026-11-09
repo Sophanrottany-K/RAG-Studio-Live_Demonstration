@@ -34,8 +34,8 @@ export default function Screen39Paused2() {
                   <div className="flex-1 min-w-0 bg-[#FAFAF9] border border-[#ECECEA] rounded-[14px] flex items-center gap-3 px-4 py-3.5 cursor-pointer" onClick={go("/kbDrop")}>
                     <img className="w-9 h-9 shrink-0" src="icons/frame-4.svg" alt="" />
                     <div className="shrink-0 flex flex-col items-start gap-0.5">
-                      <div className="shrink-0 whitespace-pre font-gabarito text-[12px] leading-normal text-[#8A8A86]">{"Knowledge base"}</div>
-                      <div className="shrink-0 whitespace-pre font-gabarito font-semibold text-[15px] leading-normal text-[#111111]">{"4 documents"}</div>
+                      <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-normal text-[#8A8A86]">{"Knowledge base"}</div>
+                      <div className="shrink-0 whitespace-pre font-gabarito font-semibold text-[17px] leading-normal text-[#111111]">{"4 documents"}</div>
                     </div>
                   </div>
                   <TileChannels2 />
@@ -43,13 +43,13 @@ export default function Screen39Paused2() {
               </div>
               <div className="self-stretch shrink-0 border-b border-border-default flex items-start gap-1">
                 <div className="h-11 shrink-0 border-b-[2px] border-border-strong flex items-center px-3.5">
-                  <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[16px] leading-[24px] text-ink-primary">{"Overview"}</div>
+                  <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[18px] leading-[26px] text-ink-primary">{"Overview"}</div>
                 </div>
                 <div className="h-11 shrink-0 flex items-center px-3.5 cursor-pointer" onClick={go("/kbDrop")}>
-                  <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[16px] leading-[24px] text-ink-secondary">{"Knowledge base"}</div>
+                  <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[18px] leading-[26px] text-ink-secondary">{"Knowledge base"}</div>
                 </div>
                 <div className="h-11 shrink-0 flex items-center px-3.5">
-                  <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[16px] leading-[24px] text-ink-secondary">{"Configuration"}</div>
+                  <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[18px] leading-[26px] text-ink-secondary">{"Configuration"}</div>
                 </div>
               </div>
               <Stats3 />
@@ -57,14 +57,14 @@ export default function Screen39Paused2() {
                 <div className="flex-1 min-w-0 flex flex-col items-start gap-6">
                   <div className="self-stretch shrink-0 bg-bg-card border border-border-default rounded-[20px] flex flex-col items-start gap-3 p-6">
                     <div className="self-stretch shrink-0 flex justify-between items-center">
-                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[18px] leading-[28px] text-ink-primary cursor-pointer" onClick={go("/kbDrop")}>{"Knowledge base"}</div>
+                      <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[20px] leading-[30px] text-ink-primary cursor-pointer" onClick={go("/kbDrop")}>{"Knowledge base"}</div>
                       <div className="shrink-0 rounded-[6px] flex items-center gap-1 px-2 py-1">
-                        <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">{"Manage documents"}</div>
+                        <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[16px] leading-[22px] text-ink-primary">{"Manage documents"}</div>
                         <img className="w-3.5 h-3.5 shrink-0" src="icons/icon-arrow-right.svg" alt="" />
                       </div>
                     </div>
                     <DocumentsTable />
-                    <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[12px] leading-[16px] text-ink-secondary">{"Showing 3 of 4 documents"}</div>
+                    <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[14px] leading-[18px] text-ink-secondary">{"Showing 3 of 4 documents"}</div>
                   </div>
                   <StarterQuestions />
                 </div>

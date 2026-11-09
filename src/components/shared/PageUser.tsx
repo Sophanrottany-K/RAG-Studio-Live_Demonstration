@@ -23,13 +23,13 @@ export function PageUser() {
               onClick={go("/list")}
             >
               <img className="w-4 h-4 shrink-0" src="icons/arrow-left-property-linear-3.svg" alt="" />
-              <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[20px] text-ink-secondary">
+              <div className="shrink-0 whitespace-pre font-gabarito text-[16px] leading-[22px] text-ink-secondary">
                 {"Chatbots"}
               </div>
-              <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-[20px] text-ink-muted">
+              <div className="shrink-0 whitespace-pre font-gabarito text-[16px] leading-[22px] text-ink-muted">
                 {"/"}
               </div>
-              <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[14px] leading-[20px] text-ink-primary">
+              <div className="shrink-0 whitespace-pre font-gabarito font-medium text-[16px] leading-[22px] text-ink-primary">
                 {"Billing Assistant"}
               </div>
             </div>
@@ -39,7 +39,7 @@ export function PageUser() {
                 <div className="shrink-0 flex items-center gap-2.5">
                   <div className="shrink-0 bg-bg-card border border-border-default rounded-full flex justify-center items-center gap-2 px-4 py-3">
                     <img className="w-4 h-4 shrink-0" src="icons/send-2-property-linear.svg" alt="" />
-                    <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[14px] leading-[16px] text-ink-primary">
+                    <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[16px] leading-[18px] text-ink-primary">
                       {"Publish"}
                     </div>
                   </div>
@@ -48,7 +48,7 @@ export function PageUser() {
                     onClick={go("/pg")}
                   >
                     <img className="w-4 h-4 shrink-0" src="icons/icon-play.svg" alt="" />
-                    <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[14px] leading-[16px] text-ink-on-dark">
+                    <div className="shrink-0 whitespace-pre font-gabarito font-bold text-[16px] leading-[18px] text-ink-on-dark">
                       {"Open Playground"}
                     </div>
                   </div>
@@ -66,10 +66,10 @@ export function PageUser() {
                 >
                   <img className="w-9 h-9 shrink-0" src="icons/frame-10.svg" alt="" />
                   <div className="shrink-0 flex flex-col items-start gap-0.5">
-                    <div className="shrink-0 whitespace-pre font-gabarito text-[12px] leading-normal text-[#8A8A86]">
+                    <div className="shrink-0 whitespace-pre font-gabarito text-[14px] leading-normal text-[#8A8A86]">
                       {"Channels"}
                     </div>
-                    <div className="shrink-0 whitespace-pre font-gabarito font-semibold text-[15px] leading-normal text-[#111111]">
+                    <div className="shrink-0 whitespace-pre font-gabarito font-semibold text-[17px] leading-normal text-[#111111]">
                       {"No channels"}
                     </div>
                   </div>

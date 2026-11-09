@@ -4,8 +4,8 @@ import { SectionLabel } from "./ui";
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="self-stretch border-t border-border-default flex justify-between items-start gap-4 py-2">
-      <div className="shrink-0 font-gabarito text-[12px] leading-[16px] text-ink-secondary">{label}</div>
-      <div className="min-w-0 truncate text-right font-gabarito font-medium text-[12px] leading-normal text-ink-primary">
+      <div className="shrink-0 font-gabarito text-[14px] leading-[18px] text-ink-secondary">{label}</div>
+      <div className="min-w-0 truncate text-right font-gabarito font-medium text-[14px] leading-normal text-ink-primary">
         {value}
       </div>
     </div>
@@ -30,23 +30,23 @@ export function DraftPreview({ step }: { step: 1 | 2 | 3 }) {
     <div className="self-stretch shrink-0 bg-bg-card border border-border-default rounded-[20px] flex flex-col items-start gap-3.5 p-5">
       <SectionLabel>Preview</SectionLabel>
       <div className="self-stretch flex items-center gap-3">
-        <div className="w-11 h-11 shrink-0 bg-bg-inverse rounded-[12px] flex justify-center items-center font-gabarito font-bold text-[16px] leading-[24px] text-ink-on-dark">
+        <div className="w-11 h-11 shrink-0 bg-bg-inverse rounded-[12px] flex justify-center items-center font-gabarito font-bold text-[18px] leading-[26px] text-ink-on-dark">
           {initials(draft.name)}
         </div>
         <div className="min-w-0 flex flex-col items-start gap-1.5">
           <div
-            className={`max-w-full truncate font-gabarito font-bold text-[18px] leading-[28px] ${draft.name.trim() ? "text-ink-primary" : "text-ink-muted"}`}
+            className={`max-w-full truncate font-gabarito font-bold text-[20px] leading-[30px] ${draft.name.trim() ? "text-ink-primary" : "text-ink-muted"}`}
           >
             {displayName(draft.name)}
           </div>
           <div className="bg-neutral-tint border border-[#D6D6D2] rounded-[20px] flex items-center gap-1.5 px-2.5 py-1">
             <div className="w-[7px] h-[7px] bg-[#8A8A86] rounded-full" />
-            <div className="font-gabarito font-medium text-[12px] leading-normal text-neutral-text">Draft</div>
+            <div className="font-gabarito font-medium text-[14px] leading-normal text-neutral-text">Draft</div>
           </div>
         </div>
       </div>
       <div
-        className={`self-stretch break-words font-gabarito text-[14px] leading-[20px] ${draft.description.trim() ? "text-ink-body" : "text-ink-muted"}`}
+        className={`self-stretch break-words font-gabarito text-[16px] leading-[22px] ${draft.description.trim() ? "text-ink-body" : "text-ink-muted"}`}
       >
         {draft.description.trim() || "No description yet"}
       </div>
@@ -83,18 +83,18 @@ export function PublishChecklist() {
             alt={item.done ? "Done" : "Not done"}
           />
           <div
-            className={`flex-1 min-w-0 font-gabarito font-medium text-[16px] leading-[24px] ${item.done ? "text-ink-primary" : "text-ink-body"}`}
+            className={`flex-1 min-w-0 font-gabarito font-medium text-[18px] leading-[26px] ${item.done ? "text-ink-primary" : "text-ink-body"}`}
           >
             {item.label}
           </div>
           <div
-            className={`shrink-0 font-gabarito font-medium text-[16px] leading-[24px] ${item.done ? "text-success-text" : "text-ink-muted"}`}
+            className={`shrink-0 font-gabarito font-medium text-[18px] leading-[26px] ${item.done ? "text-success-text" : "text-ink-muted"}`}
           >
             {item.done ? "Done" : item.where}
           </div>
         </div>
       ))}
-      <div className="self-stretch h-14.5 bg-bg-card border border-border-default rounded-[20px] flex justify-center items-center px-7 py-4 font-gabarito font-bold text-[18px] leading-[24px] tracking-[0.01em] text-ink-disabled">
+      <div className="self-stretch h-14.5 bg-bg-card border border-border-default rounded-[20px] flex justify-center items-center px-7 py-4 font-gabarito font-bold text-[20px] leading-[26px] tracking-[0.01em] text-ink-disabled">
         Publish (finish setup first)
       </div>
     </div>

@@ -308,13 +308,13 @@ function StatCard({
     <div className={`flex-1 min-w-0 self-stretch ${bg} rounded-[24px] flex flex-col items-start gap-3.5 p-5`}>
       <div className="self-stretch shrink-0 overflow-hidden flex items-center gap-3">
         <img className="w-11 h-11 shrink-0" src={icon} alt="" />
-        <div className="flex-1 min-w-0 font-gabarito font-medium text-[15px] leading-normal text-[#171A2B]">
+        <div className="flex-1 min-w-0 font-gabarito font-medium text-[17px] leading-normal text-[#171A2B]">
           {label}
         </div>
       </div>
       <div className="self-stretch shrink-0 flex flex-col items-start gap-1">
-        <div className="font-gabarito font-bold text-[36px] leading-[40px] tracking-[-1px] text-[#171A2B]">{value}</div>
-        <div className="self-stretch font-gabarito text-[13px] leading-[16px] text-[#5B6072]">{note}</div>
+        <div className="font-gabarito font-bold text-[38px] leading-[42px] tracking-[-1px] text-[#171A2B]">{value}</div>
+        <div className="self-stretch font-gabarito text-[15px] leading-[18px] text-[#5B6072]">{note}</div>
       </div>
     </div>
   );

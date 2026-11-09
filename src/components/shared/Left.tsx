@@ -8,7 +8,7 @@ export function Left() {
       <div className="self-stretch shrink-0 bg-bg-card border border-border-default rounded-[20px] flex flex-col items-start gap-3 p-6">
         <CardHeader3 />
         <DocumentsTable />
-        <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[12px] leading-[16px] text-ink-secondary">{"Showing 3 of 4 documents"}</div>
+        <div className="self-stretch shrink-0 whitespace-pre-wrap font-gabarito text-[14px] leading-[18px] text-ink-secondary">{"Showing 3 of 4 documents"}</div>
       </div>
       <StarterQuestions />
     </div>

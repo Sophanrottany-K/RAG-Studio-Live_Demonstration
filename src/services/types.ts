@@ -76,6 +76,8 @@ export type ChatbotDocument = {
   type: string;
   sizeBytes: number | null;
   status: DocumentStatus;
+  /** How far processing has got, 0–1 (upload → extract → split → embed → store). Only while processing. */
+  progress?: number;
   error?: string;
 };
 
@@ -164,7 +166,14 @@ export type ChatAnswer = {
   sources: ChatSource[];
 };
 
-export type ChatSource = { documentId: string; name: string; type: string; snippet: string };
+export type ChatSource = {
+  documentId: string;
+  name: string;
+  type: string;
+  snippet: string;
+  /** The whole passage the answer was retrieved from; the source viewer highlights it. */
+  passage?: string;
+};
 
 export type ChatMessage =
   | { id: string; role: "user"; text: string }

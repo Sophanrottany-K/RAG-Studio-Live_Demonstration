@@ -74,8 +74,8 @@ export function TelegramCard({
           <div className="self-stretch bg-[#E7F6EC] border border-[#B7E2C8] rounded-[12px] px-4 py-3.5 flex items-center gap-4">
             <span className="w-2 h-2 shrink-0 rounded-full bg-[#1A7F37]" />
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-              <div className="font-gabarito font-bold text-[15px] text-[#1A7F37]">{telegram.botUsername} is live</div>
-              <div className="font-gabarito text-[13px] text-ink-secondary">
+              <div className="font-gabarito font-bold text-[17px] text-[#1A7F37]">{telegram.botUsername} is live</div>
+              <div className="font-gabarito text-[15px] text-ink-secondary">
                 Token <span className="font-roboto-mono">••••••••{telegram.tokenHint}</span> · Webhook set automatically
                 · {telegram.messagesThisWeek} messages this week
               </div>
@@ -84,7 +84,7 @@ export function TelegramCard({
               Disconnect
             </Button>
           </div>
-          <div className="font-gabarito text-[13px] text-ink-secondary">
+          <div className="font-gabarito text-[15px] text-ink-secondary">
             To use a different bot, disconnect first and paste the new token.
           </div>
           {error && <Banner tone="danger">{error.message}</Banner>}
@@ -115,7 +115,7 @@ export function TelegramCard({
                   placeholder="123456789:AAH…"
                   value={token}
                   invalid={error?.field === "token"}
-                  className="flex-1 min-w-0 font-roboto-mono text-[13px]"
+                  className="flex-1 min-w-0 font-roboto-mono text-[15px]"
                   onChange={(e) => {
                     setToken(e.target.value);
                     if (error) setError(null);

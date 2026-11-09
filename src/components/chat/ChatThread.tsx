@@ -136,8 +136,8 @@ export function ChatThread({
       <div ref={scrollRef} onScroll={measure} className="self-stretch flex-1 min-h-0 overflow-y-auto">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col justify-center items-center gap-3 p-7 text-center">
-            <div className="font-gabarito font-bold text-[24px] leading-normal text-[#111111]">{emptyTitle}</div>
-            <div className="font-gabarito text-[15px] leading-normal text-[#6B6B6B]">{emptySubtitle}</div>
+            <div className="font-gabarito font-bold text-[26px] leading-normal text-[#111111]">{emptyTitle}</div>
+            <div className="font-gabarito text-[17px] leading-normal text-[#6B6B6B]">{emptySubtitle}</div>
             {starterQuestions.length > 0 && (
               <div className="flex flex-wrap justify-center items-start gap-2.5 pt-3">
                 {starterQuestions.map((q) => (
@@ -145,7 +145,7 @@ export function ChatThread({
                     key={q}
                     type="button"
                     onClick={() => send(q)}
-                    className="bg-[#FFFFFF] border border-[#E4E4E0] rounded-full px-4 py-2.5 font-gabarito font-medium text-[14px] leading-normal text-[#444444] hover:bg-bg-soft cursor-pointer"
+                    className="bg-[#FFFFFF] border border-[#E4E4E0] rounded-full px-4 py-2.5 font-gabarito font-medium text-[16px] leading-normal text-[#444444] hover:bg-bg-soft cursor-pointer"
                   >
                     {q}
                   </button>
@@ -159,7 +159,7 @@ export function ChatThread({
               m.role === "user" ? (
                 <div key={m.id} className="self-stretch flex justify-end">
                   <div
-                    className="max-w-[75%] rounded-tl-[16px] rounded-tr-[16px] rounded-br-[4px] rounded-bl-[16px] px-4 py-3 font-gabarito text-[15px] leading-[24px] text-white whitespace-pre-wrap break-words"
+                    className="max-w-[75%] rounded-tl-[16px] rounded-tr-[16px] rounded-br-[4px] rounded-bl-[16px] px-4 py-3 font-gabarito text-[17px] leading-[26px] text-white whitespace-pre-wrap break-words"
                     style={{ background: accent, color: isLightColor(accent) ? "#111111" : "#FFFFFF" }}
                   >
                     {m.text}
@@ -168,10 +168,10 @@ export function ChatThread({
               ) : m.role === "bot" ? (
                 <div key={m.id} className="self-stretch flex flex-col items-start gap-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 shrink-0 bg-bg-sidebar-dark rounded-[7.78px] flex justify-center items-center font-gabarito font-bold text-[10px] text-ink-on-dark">
+                    <div className="w-7 h-7 shrink-0 bg-bg-sidebar-dark rounded-[7.78px] flex justify-center items-center font-gabarito font-bold text-[12px] text-ink-on-dark">
                       {initial}
                     </div>
-                    <div className="font-jet-brains-mono font-medium text-[11px] leading-[16px] tracking-[0.06em] uppercase text-ink-muted-2">
+                    <div className="font-jet-brains-mono font-medium text-[13px] leading-[18px] tracking-[0.06em] uppercase text-ink-muted-2">
                       {m.answer.answered
                         ? `Retrieved ${m.answer.sources.length} source${m.answer.sources.length === 1 ? "" : "s"} · Answer found`
                         : `Searched ${m.answer.sourcesSearched} source${m.answer.sourcesSearched === 1 ? "" : "s"} · No answer found`}
@@ -182,13 +182,13 @@ export function ChatThread({
                       markdown={stream?.id === m.id ? m.answer.answer.slice(0, stream.length) : m.answer.answer}
                     />
                   ) : (
-                    <div className="max-w-[85%] font-gabarito text-[15px] leading-[24px] text-ink-body-2 whitespace-pre-wrap [overflow-wrap:anywhere]">
+                    <div className="max-w-[85%] font-gabarito text-[17px] leading-[26px] text-ink-body-2 whitespace-pre-wrap [overflow-wrap:anywhere]">
                       {fadingWords(stream?.id === m.id ? m.answer.answer.slice(0, stream.length) : m.answer.answer)}
                     </div>
                   )}
                   {stream?.id !== m.id && sources !== "hidden" && m.answer.sources.length > 0 && (
                     <div className="max-w-[85%] flex flex-col items-start gap-2">
-                      <div className="font-gabarito font-medium text-[13px] text-ink-secondary">
+                      <div className="font-gabarito font-medium text-[15px] text-ink-secondary">
                         {`Retrieved sources (${m.answer.sources.length})`}
                       </div>
                       <div className="max-w-full flex flex-wrap gap-2">
@@ -202,10 +202,10 @@ export function ChatThread({
                               className="max-w-full flex items-center gap-2 bg-[#FFFFFF] border border-[#E4E4E0] rounded-full pl-1.5 pr-3 py-1 hover:bg-bg-soft cursor-pointer"
                             >
                               <SourceBadge type={s.type} />
-                              <span className="min-w-0 truncate font-gabarito font-medium text-[13px] text-[#111111]">
+                              <span className="min-w-0 truncate font-gabarito font-medium text-[15px] text-[#111111]">
                                 {s.name}
                               </span>
-                              <span className="text-[12px] text-ink-muted">↗</span>
+                              <span className="text-[14px] text-ink-muted">↗</span>
                             </button>
                           ) : (
                             <span
@@ -214,7 +214,7 @@ export function ChatThread({
                               className="max-w-full flex items-center gap-2 bg-[#FAFAF9] border border-[#ECECEA] rounded-full pl-1.5 pr-3 py-1"
                             >
                               <SourceBadge type={s.type} />
-                              <span className="min-w-0 truncate font-gabarito text-[13px] text-[#444444]">{s.name}</span>
+                              <span className="min-w-0 truncate font-gabarito text-[15px] text-[#444444]">{s.name}</span>
                             </span>
                           ),
                         )}
@@ -226,7 +226,7 @@ export function ChatThread({
                 <div
                   key={m.id}
                   role="alert"
-                  className="self-stretch flex items-center gap-3 bg-danger-tint border border-danger-border rounded-[12px] px-4 py-3 font-gabarito text-[14px] text-danger-text"
+                  className="self-stretch flex items-center gap-3 bg-danger-tint border border-danger-border rounded-[12px] px-4 py-3 font-gabarito text-[16px] text-danger-text"
                 >
                   <span className="flex-1">{m.text}</span>
                   <button
@@ -259,7 +259,7 @@ export function ChatThread({
             type="button"
             aria-label={busy ? "Still responding. Scroll to the latest text" : "Scroll to the latest message"}
             onClick={scrollToEnd}
-            className="absolute -top-12 left-1/2 -translate-x-1/2 min-w-9 h-9 px-2.5 rounded-full bg-[#FFFFFF] border border-[#E4E4E0] shadow-[0px_1px_6px_0px_#1111111A] flex justify-center items-center text-[16px] leading-none text-[#444444] hover:bg-bg-soft cursor-pointer"
+            className="absolute -top-12 left-1/2 -translate-x-1/2 min-w-9 h-9 px-2.5 rounded-full bg-[#FFFFFF] border border-[#E4E4E0] shadow-[0px_1px_6px_0px_#1111111A] flex justify-center items-center text-[18px] leading-none text-[#444444] hover:bg-bg-soft cursor-pointer"
           >
             {/* Three dots while the answer is still coming below; the arrow once it is done. */}
             {busy ? <TypingDots /> : "↓"}
@@ -279,7 +279,7 @@ export function ChatThread({
                 send(text);
               }
             }}
-            className="flex-1 min-w-0 max-h-32 self-center resize-none bg-transparent border-0 py-2 font-gabarito text-[16px] leading-[24px] text-ink-primary placeholder:text-ink-muted focus:outline-none"
+            className="flex-1 min-w-0 max-h-32 self-center resize-none bg-transparent border-0 py-2 font-gabarito text-[18px] leading-[26px] text-ink-primary placeholder:text-ink-muted focus:outline-none"
           />
           {busy ? (
             <button
@@ -301,7 +301,7 @@ export function ChatThread({
               type="submit"
               aria-label="Send question"
               disabled={!text.trim()}
-              className="w-11 h-11 shrink-0 rounded-full flex justify-center items-center text-white text-[20px] leading-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-11 h-11 shrink-0 rounded-full flex justify-center items-center text-white text-[22px] leading-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
               style={{ background: accent, color: isLightColor(accent) ? "#111111" : "#FFFFFF" }}
             >
               ↑
@@ -346,7 +346,7 @@ function SourceBadge({ type }: { type: string }) {
       </span>
     );
   return (
-    <span className="h-5 shrink-0 rounded-[5px] bg-[#F3F3F1] px-1.5 flex items-center font-geist-mono text-[9px] text-[#525252]">
+    <span className="h-5 shrink-0 rounded-[5px] bg-[#F3F3F1] px-1.5 flex items-center font-geist-mono text-[11px] text-[#525252]">
       {type}
     </span>
   );

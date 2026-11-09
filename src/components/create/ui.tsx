@@ -10,11 +10,11 @@ import type {
 const cx = (...classes: (string | false | null | undefined)[]) => classes.filter(Boolean).join(" ");
 
 const fieldBase =
-  "self-stretch bg-bg-card border rounded-[12px] font-gabarito text-[14px] leading-[20px] text-ink-primary placeholder:text-[#999999] transition-colors focus:outline-none focus:border-ink-primary focus:ring-1 focus:ring-ink-primary disabled:bg-bg-subtle disabled:text-ink-disabled";
+  "self-stretch bg-bg-card border rounded-[12px] font-gabarito text-[16px] leading-[22px] text-ink-primary placeholder:text-[#999999] transition-colors focus:outline-none focus:border-ink-primary focus:ring-1 focus:ring-ink-primary disabled:bg-bg-subtle disabled:text-ink-disabled";
 
 export function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <div className="shrink-0 font-gabarito font-medium text-[11px] leading-[16px] tracking-[2.4px] uppercase text-ink-secondary">
+    <div className="shrink-0 font-gabarito font-medium text-[13px] leading-[18px] tracking-[2.4px] uppercase text-ink-secondary">
       {children}
     </div>
   );
@@ -38,20 +38,20 @@ export function Field({
   return (
     <div className="self-stretch shrink-0 flex flex-col items-start gap-2">
       <div className="self-stretch flex justify-between items-center gap-3">
-        <label htmlFor={htmlFor} className="font-gabarito font-medium text-[12px] leading-[16px] text-ink-primary">
+        <label htmlFor={htmlFor} className="font-gabarito font-medium text-[14px] leading-[18px] text-ink-primary">
           {label}
         </label>
         {counter && (
-          <div className="font-geist-mono text-[12px] leading-[16px] tracking-[0.4px] text-ink-muted">{counter}</div>
+          <div className="font-geist-mono text-[14px] leading-[18px] tracking-[0.4px] text-ink-muted">{counter}</div>
         )}
       </div>
       {children}
       {error ? (
-        <div role="alert" className="self-stretch font-gabarito text-[12px] leading-[16px] text-danger-text">
+        <div role="alert" className="self-stretch font-gabarito text-[14px] leading-[18px] text-danger-text">
           {error}
         </div>
       ) : (
-        hint && <div className="self-stretch font-gabarito text-[12px] leading-[16px] text-ink-secondary">{hint}</div>
+        hint && <div className="self-stretch font-gabarito text-[14px] leading-[18px] text-ink-secondary">{hint}</div>
       )}
     </div>
   );
@@ -141,7 +141,7 @@ export function ChipGroup<T extends string>({
             aria-checked={selected}
             onClick={() => onChange(option)}
             className={cx(
-              "h-9 rounded-full flex items-center px-3.5 border font-gabarito font-medium text-[14px] leading-[20px] transition-colors cursor-pointer",
+              "h-9 rounded-full flex items-center px-3.5 border font-gabarito font-medium text-[16px] leading-[22px] transition-colors cursor-pointer",
               selected
                 ? "bg-bg-inverse border-bg-inverse text-ink-on-dark"
                 : "bg-bg-card border-border-default text-ink-body hover:border-ink-muted",
@@ -172,7 +172,7 @@ export function Button({
       {...props}
       disabled={disabled || loading}
       className={cx(
-        "shrink-0 rounded-[20px] flex justify-center items-center gap-2 px-6 py-3.5 font-gabarito font-bold text-[16px] leading-[20px] transition-opacity cursor-pointer disabled:cursor-not-allowed disabled:opacity-40",
+        "shrink-0 rounded-[20px] flex justify-center items-center gap-2 px-6 py-3.5 font-gabarito font-bold text-[18px] leading-[22px] transition-opacity cursor-pointer disabled:cursor-not-allowed disabled:opacity-40",
         variant === "primary" && "bg-bg-inverse text-ink-on-dark hover:opacity-90",
         variant === "secondary" && "bg-bg-card border border-border-default text-ink-primary hover:bg-bg-soft",
         variant === "ghost" && "text-ink-primary hover:bg-bg-soft",
@@ -220,7 +220,7 @@ export function StatusPill({ tone, children, pulse }: { tone: Tone; children: Re
       <span className={cx("w-[5px] h-[5px] rounded-full", t.dot, pulse && "animate-pulse")} />
       <span
         className={cx(
-          "whitespace-pre font-gabarito font-medium text-[10px] leading-[14px] tracking-[0.3px] uppercase",
+          "whitespace-pre font-gabarito font-medium text-[12px] leading-[16px] tracking-[0.3px] uppercase",
           t.text,
         )}
       >
@@ -243,7 +243,7 @@ export function Banner({
     <div
       role={tone === "danger" ? "alert" : "status"}
       className={cx(
-        "self-stretch shrink-0 rounded-[12px] flex items-start gap-2.5 px-3.5 py-3 font-gabarito text-[14px] leading-[20px]",
+        "self-stretch shrink-0 rounded-[12px] flex items-start gap-2.5 px-3.5 py-3 font-gabarito text-[16px] leading-[22px]",
         tone === "info" && "bg-bg-subtle text-ink-body",
         tone === "danger" && "bg-danger-tint border border-danger-border text-danger-text",
         tone === "warning" && "bg-warning-surface border border-warning-tint text-warning-text",
@@ -260,7 +260,7 @@ export function Banner({
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss"
-          className="shrink-0 text-[16px] leading-none opacity-60 hover:opacity-100 cursor-pointer"
+          className="shrink-0 text-[18px] leading-none opacity-60 hover:opacity-100 cursor-pointer"
         >
           ×
         </button>
