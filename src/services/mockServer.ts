@@ -392,8 +392,8 @@ function previewUrl(text: string): UrlPreview {
   return { url, host: parsed.hostname, title };
 }
 
-/** Processing a batch of sources takes one minute end to end: a short queued wait, then the five stages. */
-const BATCH_MS = 60_000;
+/** Processing a batch of sources takes 50 seconds end to end: a short queued wait, then the five stages. */
+const BATCH_MS = 50_000;
 const QUEUE_DELAY_MS = 1200;
 
 /**
