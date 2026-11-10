@@ -38,7 +38,9 @@ export function StatCard({
   details: { label: string; value: ReactNode; onClick?: () => void }[];
 }) {
   return (
-    <section className={`rounded-card-sm border-line border p-6 ${statCardTone[tone]}`}>
+    <section
+      className={`rounded-card-sm border-line border p-6 transition-[transform,box-shadow] duration-200 ease-out motion-safe:hover:scale-[1.03] hover:shadow-lg motion-safe:active:scale-[1.05] ${statCardTone[tone]}`}
+    >
       <div className="flex items-center gap-3">
         <span className="bg-card rounded-small flex size-10 shrink-0 items-center justify-center">
           <Icon className={`size-5 ${statIconTone[tone]}`} aria-hidden />
