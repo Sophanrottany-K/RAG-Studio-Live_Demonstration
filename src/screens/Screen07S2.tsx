@@ -14,13 +14,13 @@ import {
   GroundingNote,
   Note,
   StarterQuestionsField,
-  Step2Aside,
-  Step2Stepper,
   WIZARD_VISIBILITY,
   modelOptionsWithHints,
 } from "../components/create/step2";
-import { Banner } from "../components/create/ui";
-import { Sidebar2 } from "../components/shared/Sidebar2";
+import { CreateLayout, StepFooter, StepHeading } from "../components/create/CreateLayout";
+import { DraftPreview, PublishChecklist } from "../components/create/DraftPreview";
+import { Banner, Button } from "../components/create/ui";
+import { useCancelCreate } from "../components/create/useCancelCreate";
 import { useChatbotDraft } from "../lib/chatbotDraft";
 import { api, errorMessage, isAbort } from "../services/api";
 import { advancedSettingsError } from "../services/limits";
@@ -30,6 +30,7 @@ export default function Screen07S2() {
   const navigate = useNavigate();
   const { draft, update, updateSettings, updateAdvanced, reachStep } = useChatbotDraft();
   const { settings } = draft;
+  const { requestCancel, dialog } = useCancelCreate();
   const [catalog, setCatalog] = useState<ModelCatalog | null>(null);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
@@ -72,118 +73,99 @@ export default function Screen07S2() {
   const modelPlaceholder = catalogError ? "Unavailable" : "Loading models…";
 
   return (
-    <div className="relative w-full h-full bg-bg-card overflow-hidden flex items-start">
-      <Sidebar2 />
-      <div className="flex-1 min-w-0 self-stretch bg-page overflow-y-auto p-8">
-        <div className="flex w-full flex-col gap-8">
-          <header>
-            <h1 className="text-h2 text-ink">Create chatbot</h1>
-            <p className="text-p3 text-ink-secondary mt-1">Three steps. You can change every setting later.</p>
-          </header>
-
-          <div className="rounded-card border border-line bg-card shadow-subtle p-7">
-            <Step2Stepper />
-          </div>
-
-          <div className="grid grid-cols-3 gap-6">
-            <form
-              noValidate
-              onSubmit={(e) => {
-                e.preventDefault();
-                submit();
-              }}
-              className="rounded-card border border-line bg-card shadow-subtle col-span-2 min-w-0 p-7"
-            >
-              <div className="flex flex-col gap-8">
-                <header>
-                  <h2 className="text-h4 text-ink">Model and behavior</h2>
-                  <p className="text-p3 text-ink-secondary mt-1">Choose the models and how your chatbot answers.</p>
-                </header>
-
-                <FieldSection title="Models">
-                  {catalogError && (
-                    <Banner tone="danger">
-                      {`Couldn't load models: ${catalogError} `}
-                      <button
-                        type="button"
-                        className="underline font-medium cursor-pointer"
-                        onClick={() => setReload((n) => n + 1)}
-                      >
-                        Try again
-                      </button>
-                    </Banner>
-                  )}
-                  <FormField label="Chat model" required hint="From the models your admin allows.">
-                    <Select
-                      label="Chat model"
-                      disabled={!catalog}
-                      placeholder={modelPlaceholder}
-                      options={modelOptionsWithHints(catalog?.chat)}
-                      value={settings.chatModel}
-                      onChange={(chatModel) => updateSettings({ chatModel })}
-                    />
-                  </FormField>
-                  <FormField label="Embedding model" required>
-                    <Select
-                      label="Embedding model"
-                      disabled={!catalog}
-                      placeholder={modelPlaceholder}
-                      options={modelOptionsWithHints(catalog?.embedding)}
-                      value={settings.embeddingModel}
-                      onChange={(embeddingModel) => updateSettings({ embeddingModel })}
-                    />
-                  </FormField>
-                  <Note yellow icon={<Lock className="size-4" aria-hidden />}>
-                    The embedding model cannot be changed after the chatbot is created.
-                  </Note>
-                </FieldSection>
-
-                <BehaviorFields
-                  settings={settings}
-                  onChange={updateSettings}
-                  instructionsError={submitted ? instructionsError : null}
-                  visibilityOptions={WIZARD_VISIBILITY}
-                />
-
-                <StarterQuestionsField
-                  questions={draft.starterQuestions}
-                  onChange={(starterQuestions) => update({ starterQuestions })}
-                />
-
-                <GroundingNote documentsOnly={settings.advanced.documentsOnly} />
-
-                <AdvancedPanel
-                  advanced={settings.advanced}
-                  onChange={updateAdvanced}
-                  open={advancedOpen}
-                  onToggle={() => setAdvancedOpen((o) => !o)}
-                  error={advancedError}
-                />
-              </div>
-
-              <footer className="border-t border-line mt-8 flex flex-wrap items-center gap-3 pt-6">
+    <CreateLayout
+      step={2}
+      overlay={dialog}
+      aside={
+        <>
+          <DraftPreview step={2} />
+          <PublishChecklist />
+        </>
+      }
+    >
+      <form
+        className="self-stretch flex flex-col items-start gap-6"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+      >
+        <StepHeading title="Model and behavior" subtitle="Choose the models and how your chatbot answers." />
+        <div className="self-stretch flex flex-col gap-8">
+          <FieldSection title="Models">
+            {catalogError && (
+              <Banner tone="danger">
+                {`Couldn't load models: ${catalogError} `}
                 <button
                   type="button"
-                  onClick={() => navigate("/s1e")}
-                  className="rounded-input border border-line text-btn-md text-ink hover:bg-subtle h-12 cursor-pointer px-5 transition-colors"
+                  className="underline font-medium cursor-pointer"
+                  onClick={() => setReload((n) => n + 1)}
                 >
-                  Back
+                  Try again
                 </button>
-                <span className="text-c1 text-ink-muted flex-1 text-center">Step 2 of 3</span>
-                <button
-                  type="submit"
-                  disabled={!catalog}
-                  className="rounded-input bg-inverse text-on-inverse text-btn-md h-12 cursor-pointer px-6 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Continue
-                </button>
-              </footer>
-            </form>
+              </Banner>
+            )}
+            <FormField label="Chat model" required hint="From the models your admin allows.">
+              <Select
+                label="Chat model"
+                disabled={!catalog}
+                placeholder={modelPlaceholder}
+                options={modelOptionsWithHints(catalog?.chat)}
+                value={settings.chatModel}
+                onChange={(chatModel) => updateSettings({ chatModel })}
+              />
+            </FormField>
+            <FormField label="Embedding model" required>
+              <Select
+                label="Embedding model"
+                disabled={!catalog}
+                placeholder={modelPlaceholder}
+                options={modelOptionsWithHints(catalog?.embedding)}
+                value={settings.embeddingModel}
+                onChange={(embeddingModel) => updateSettings({ embeddingModel })}
+              />
+            </FormField>
+            <Note yellow icon={<Lock className="size-4" aria-hidden />}>
+              The embedding model cannot be changed after the chatbot is created.
+            </Note>
+          </FieldSection>
 
-            <Step2Aside />
-          </div>
+          <BehaviorFields
+            settings={settings}
+            onChange={updateSettings}
+            instructionsError={submitted ? instructionsError : null}
+            visibilityOptions={WIZARD_VISIBILITY}
+          />
+
+          <StarterQuestionsField
+            questions={draft.starterQuestions}
+            onChange={(starterQuestions) => update({ starterQuestions })}
+          />
+
+          <GroundingNote documentsOnly={settings.advanced.documentsOnly} />
+
+          <AdvancedPanel
+            advanced={settings.advanced}
+            onChange={updateAdvanced}
+            open={advancedOpen}
+            onToggle={() => setAdvancedOpen((o) => !o)}
+            error={advancedError}
+          />
         </div>
-      </div>
-    </div>
+        <StepFooter>
+          <Button icon="icons/arrow-left-property-linear-2.svg" onClick={() => navigate("/s1e")}>
+            Back
+          </Button>
+          <Button variant="ghost" onClick={requestCancel}>
+            Cancel
+          </Button>
+          <div className="flex-1" />
+          <Button type="submit" variant="primary" disabled={!catalog}>
+            Continue
+          </Button>
+        </StepFooter>
+      </form>
+    </CreateLayout>
   );
 }
