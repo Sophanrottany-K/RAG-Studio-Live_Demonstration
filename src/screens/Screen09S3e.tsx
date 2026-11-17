@@ -124,7 +124,7 @@ export default function Screen09S3e() {
           setDragOver(false);
           if (!full) takeFiles(e.dataTransfer.files);
         }}
-        className={`self-stretch shrink-0 border-2 border-dashed rounded-[28px] flex flex-col items-center gap-4 px-8 py-12 transition-colors outline-none focus-visible:border-ink-primary ${
+        className={`self-stretch shrink-0 border-2 border-dashed rounded-[12px] flex flex-col items-center gap-2 px-6 py-8 transition-colors outline-none focus-visible:border-ink-primary ${
           full
             ? "opacity-50 cursor-not-allowed border-border-dashed"
             : dragOver
@@ -140,11 +140,11 @@ export default function Screen09S3e() {
           className="hidden"
           onChange={(e) => (takeFiles(e.target.files), (e.target.value = ""))}
         />
-        <img className="w-16 h-16 shrink-0" src="icons/icon-tile-4.svg" alt="" />
-        <div className="font-gabarito font-bold text-[26px] leading-[30px] text-ink-primary">
+        <img className="w-12 h-12 shrink-0" src="icons/icon-tile-4.svg" alt="" />
+        <div className="font-gabarito font-bold text-[18px] leading-[26px] text-ink-primary">
           {dragOver ? "Drop to upload" : "Upload documents"}
         </div>
-        <div className="text-center font-gabarito text-[18px] leading-[26px] text-ink-secondary">
+        <div className="text-center font-gabarito text-[14px] leading-[18px] text-ink-secondary">
           {full ? (
             `You've reached ${SOURCES_MAX} sources.`
           ) : (
