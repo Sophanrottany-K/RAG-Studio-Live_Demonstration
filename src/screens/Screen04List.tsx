@@ -218,7 +218,7 @@ export default function Screen04List() {
                       {"Knowledge base"}
                     </div>
                   </div>
-                  <div className="w-37.5 shrink-0 flex items-center gap-2 cursor-pointer" onClick={go("/tch")}>
+                  <div className="w-24 shrink-0 flex items-center gap-2 cursor-pointer" onClick={go("/tch")}>
                     <div className="shrink-0 whitespace-pre font-geist-mono font-medium text-[13px] leading-normal tracking-[0.01em] uppercase text-[#FFFFFF]">
                       {"Channels"}
                     </div>

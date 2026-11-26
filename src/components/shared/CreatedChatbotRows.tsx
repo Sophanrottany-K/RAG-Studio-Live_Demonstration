@@ -157,7 +157,7 @@ export function CreatedChatbotRows({
               </div>
             </div>
             {row.channels.length ? (
-              <div className="w-37.5 shrink-0 flex items-center gap-2.5">
+              <div className="w-24 shrink-0 flex items-center gap-2.5">
                 {row.channels.map((channel) => (
                   <img
                     key={channel}
@@ -169,7 +169,7 @@ export function CreatedChatbotRows({
                 ))}
               </div>
             ) : (
-              <div className="w-37.5 shrink-0 truncate font-gabarito text-[14px] leading-[18px] text-[#9A9A96]">
+              <div className="w-24 shrink-0 truncate font-gabarito text-[14px] leading-[18px] text-[#9A9A96]">
                 {"Not connected"}
               </div>
             )}
