@@ -51,6 +51,7 @@ import { TEXT_VERSION, extractText } from "./extractText";
 import { computeAnalytics, computeUnanswered, type ChatEvent } from "./mockAnalytics";
 import { PREPARED_SOURCE, markdownToPlainText, preparedAnswer } from "./preparedAnswers";
 import { siteStorage } from "./siteStorage";
+import { TelegramError, telegramCall, type TelegramUser } from "./telegram";
 
 const DB_KEY = "rag-studio-mock-db";
 
@@ -112,6 +113,11 @@ type Db = {
   channels: Record<string, ChatbotChannels>;
   /** Chat log behind GET /analytics; the newest CHAT_LOG_MAX questions are kept. */
   events: ChatEvent[];
+  /**
+   * Telegram bot tokens by chatbot id, with the next getUpdates offset. Kept apart from `channels` because the
+   * API never sends a token back (TelegramChannel only carries `tokenHint`).
+   */
+  telegramBots?: Record<string, { token: string; offset: number }>;
   /** Set once the built-in chatbots saved in this browser have moved from qwen3:8b to gemma4:12b. */
   builtInsOnGemma4?: boolean;
 };
@@ -536,6 +542,10 @@ function withChannels(chatbotId: string, change?: (c: ChatbotChannels, name: str
   // Widgets generated before widget.js existed still carry the placeholder CDN address.
   if (channels.widget.embedCode?.includes("cdn.ragstudio.app"))
     channels.widget.embedCode = widgetSnippet(chatbotId, channels.widget);
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  channels.telegram.messagesThisWeek = channels.telegram.connected
+    ? db.events.filter((e) => e.chatbotId === chatbotId && e.channel === "telegram" && e.at >= weekAgo).length
+    : 0;
   if (change) {
     change(channels, name);
     db.channels[chatbotId] = channels;
@@ -662,8 +672,9 @@ function findWidget(chatbotId: string, embed?: Partial<WidgetEmbed>) {
   return { bot, chat };
 }
 
-function connectTelegram(chatbotId: string, token: string) {
-  const trimmed = token.trim();
+/** Checks the token with Telegram (getMe), takes the bot off any webhook so it can be polled, and saves it. */
+async function connectTelegram(chatbotId: string, token: unknown) {
+  const trimmed = typeof token === "string" ? token.trim() : "";
   if (!isTelegramToken(trimmed))
     throw new ApiError(
       "This doesn't look like a bot token. It should look like 123456789:AAH…",
@@ -671,23 +682,93 @@ function connectTelegram(chatbotId: string, token: string) {
       "invalid",
       "token",
     );
-  // Mock rule: bot ids starting with 000 stand in for tokens Telegram rejects (revoked or mistyped).
-  if (trimmed.startsWith("000"))
+  const before = loadDb();
+  if (!before.chatbots.some((b) => b.id === chatbotId)) throw new ApiError("Chatbot not found.", 404, "not_found");
+  const owner = Object.entries(before.telegramBots ?? {}).find(([id, b]) => b.token === trimmed && id !== chatbotId);
+  if (owner)
     throw new ApiError(
-      "Telegram rejected this token. Copy it again from @BotFather.",
-      401,
-      "telegram_unauthorized",
+      "This bot is already connected to another chatbot. Disconnect it there first.",
+      409,
+      "conflict",
       "token",
     );
-  return withChannels(chatbotId, (c, name) => {
+  let me: TelegramUser;
+  try {
+    me = await telegramCall<TelegramUser>(trimmed, "getMe");
+    // Polling and webhooks are exclusive; also skip messages sent before the bot was connected.
+    await telegramCall(trimmed, "deleteWebhook", { drop_pending_updates: true });
+  } catch (e) {
+    if (e instanceof TelegramError && (e.code === 401 || e.code === 404))
+      throw new ApiError(
+        "Telegram rejected this token. Copy it again from @BotFather.",
+        401,
+        "telegram_unauthorized",
+        "token",
+      );
+    throw new ApiError(e instanceof Error ? e.message : "Couldn't reach Telegram.", 502, "telegram_unreachable");
+  }
+  const db = loadDb();
+  db.telegramBots = { ...db.telegramBots, [chatbotId]: { token: trimmed, offset: 0 } };
+  saveDb(db);
+  return withChannels(chatbotId, (c) => {
     c.telegram = {
       connected: true,
-      botUsername: `@${slugify(name).replace(/-/g, "_")}_bot`,
+      botUsername: `@${me.username ?? me.first_name}`,
       tokenHint: trimmed.slice(-4),
       connectedAt: new Date().toISOString(),
       messagesThisWeek: 0,
     };
   });
+}
+
+function disconnectTelegram(chatbotId: string) {
+  const db = loadDb();
+  if (db.telegramBots?.[chatbotId]) {
+    delete db.telegramBots[chatbotId];
+    saveDb(db);
+  }
+  return withChannels(chatbotId, (c) => {
+    c.telegram = { connected: false, botUsername: null, tokenHint: null, connectedAt: null, messagesThisWeek: 0 };
+  });
+}
+
+/** The connected bots, for the poller in telegramPoller.ts. */
+export function telegramBotTokens() {
+  const db = loadDb();
+  return Object.entries(db.telegramBots ?? {})
+    .filter(([id]) => db.channels[id]?.telegram.connected)
+    .map(([chatbotId, b]) => ({ chatbotId, token: b.token, offset: b.offset }));
+}
+
+/** Remembers how far a bot's updates have been handled, so a reload doesn't answer them twice. */
+export function setTelegramOffset(chatbotId: string, offset: number) {
+  const db = loadDb();
+  const bot = db.telegramBots?.[chatbotId];
+  if (!bot || bot.offset >= offset) return;
+  bot.offset = offset;
+  saveDb(db);
+}
+
+/** What the bot says back to one Telegram message; also logs it for analytics like the other channels. */
+export async function telegramReply(chatbotId: string, chatId: number, text: string): Promise<string> {
+  const stored = loadDb().chatbots.find((b) => b.id === chatbotId);
+  if (!stored) return "This chatbot no longer exists.";
+  const bot = toChatbot(stored);
+  const question = text.trim();
+  if (/^\/(start|help)\b/i.test(question)) {
+    const starters = bot.settings.starterQuestions.filter(Boolean);
+    return [
+      `Hi! I'm ${bot.name}. Ask me anything and I'll answer from my knowledge base.`,
+      ...(starters.length ? ["", "You could try:", ...starters.map((q) => `• ${q}`)] : []),
+    ].join("\n");
+  }
+  if (bot.status === "paused") return "This chatbot is temporarily unavailable. Please try again later.";
+  if (bot.status !== "active") return "This chatbot hasn't been published yet.";
+  const answer = await answerFor(bot, question.slice(0, 2000));
+  logChat(bot.id, "telegram", `tg_${chatId}`, question, answer);
+  const body = answer.markdown ? markdownToPlainText(answer.answer) : answer.answer;
+  const source = answer.sources[0];
+  return source && bot.settings.sourceVisibility !== "Hidden" ? `${body}\n\nSource: ${source.name}` : body;
 }
 
 function channelsRoute(method: string, chatbotId: string, rest: string, body: unknown) {
@@ -709,11 +790,8 @@ function channelsRoute(method: string, chatbotId: string, rest: string, body: un
       channel.enabled = (body as { enabled: boolean }).enabled;
       channel.updatedAt = new Date().toISOString();
     });
-  if (route === "POST /telegram") return connectTelegram(chatbotId, (body as { token: string }).token);
-  if (route === "DELETE /telegram")
-    return withChannels(chatbotId, (c) => {
-      c.telegram = { connected: false, botUsername: null, tokenHint: null, connectedAt: null, messagesThisWeek: 0 };
-    });
+  if (route === "POST /telegram") return connectTelegram(chatbotId, (body as { token?: unknown })?.token);
+  if (route === "DELETE /telegram") return disconnectTelegram(chatbotId);
   return null;
 }
 
@@ -1172,6 +1250,7 @@ function deleteChatbot(id: string) {
   db.chatbots = db.chatbots.filter((c) => c.id !== id);
   delete db.channels[id];
   db.events = db.events.filter((e) => e.chatbotId !== id);
+  if (db.telegramBots) delete db.telegramBots[id];
   saveDb(db);
 }
 

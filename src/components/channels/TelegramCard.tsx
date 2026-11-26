@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api } from "../../services/api";
+import { api, usingMockApi } from "../../services/api";
 import { isTelegramToken } from "../../services/limits";
 import type { ChatbotChannels, TelegramChannel } from "../../services/types";
 import { ConfirmDialog } from "../create/ConfirmDialog";
@@ -76,8 +76,9 @@ export function TelegramCard({
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
               <div className="font-gabarito font-bold text-[17px] text-[#1A7F37]">{telegram.botUsername} is live</div>
               <div className="font-gabarito text-[15px] text-ink-secondary">
-                Token <span className="font-roboto-mono">••••••••{telegram.tokenHint}</span> · Webhook set automatically
-                · {telegram.messagesThisWeek} messages this week
+                Token <span className="font-roboto-mono">••••••••{telegram.tokenHint}</span> ·{" "}
+                {usingMockApi ? "Answers while RAG Studio is open in this browser" : "Webhook set automatically"} ·{" "}
+                {telegram.messagesThisWeek} messages this week
               </div>
             </div>
             <Button variant="secondary" loading={busy === "disconnect"} onClick={() => setConfirmDisconnect(true)}>
@@ -104,7 +105,11 @@ export function TelegramCard({
               label="Telegram bot token"
               htmlFor="telegram-token"
               error={error?.field === "token" ? error.message : null}
-              hint="We store the token encrypted and only show its last 4 characters."
+              hint={
+                usingMockApi
+                  ? "Demo mode: the token is kept in this browser only, and the bot answers while RAG Studio is open here."
+                  : "We store the token encrypted and only show its last 4 characters."
+              }
             >
               <div className="self-stretch flex items-start gap-2.5">
                 <TextInput
